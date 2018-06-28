@@ -11,7 +11,18 @@ namespace MVCWebApp.Controllers
         // GET: Admin
         public ActionResult DB_Admin()
         {
-            return View();
+            //確保別的使用者或未登入者不會進來
+            switch (Session["key"])
+            {
+                case "USER":
+                    Response.Redirect("~/User/DB_User");
+                    return new EmptyResult();
+                case "ADMIN":
+                    return View();
+                default:
+                    Response.Redirect("~/Account/Login");
+                    return new EmptyResult();
+            }
         }
     }
 }

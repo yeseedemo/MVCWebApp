@@ -9,6 +9,7 @@ namespace MVCWebApp.Models
     {
         public String uid { get; set; }
         public String upw { get; set; }
+        public String repw { get; set; }
         public String per { get; set; }
     }
 }

@@ -1,5 +1,5 @@
 ﻿@{
-    ViewBag.Title = "Login";
+    ViewBag.Title = "Log in";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -7,9 +7,11 @@
 @Scripts.Render("~/bundles/modernizr")
 
 <form style="margin-left:10px;" method="post" action="">
+    <!-- 使用post 傳遞使用者帳密-->
     <h1>請輸入帳號及密碼</h1>
     <div>
-        <span style="color:red">@ViewBag.Msg</span> <!-- 錯誤提示用的 -->
+        <span style="color:red">@ViewBag.Msg</span>  <!-- 錯誤提示用的 -->
+        <span style="color:red">@TempData["Msg2"]</span>  <!-- 註冊後登入提示用的 -->
     </div>
     <div class="form-group">
         <label for="exampleInputEmail">帳號</label>
@@ -24,6 +26,6 @@
 
 <!--
     參考資料
-    https://ithelp.ithome.com.tw/articles/10196006
-    https://ithelp.ithome.com.tw/articles/10196119
+    << 登入頁製作
+    https://ithelp.ithome.com.tw/users/20105694/ironman/1329?page=3 <<系列
 *-->

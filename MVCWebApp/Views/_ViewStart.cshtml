@@ -2,22 +2,26 @@
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+
+    修改為動態變更Layout
+    參考：
+    https://dotblogs.com.tw/stanley14/2016/06/29/202231
 -->
 
 @{
-    string ControllerName = Convert.ToString(HttpContext.Current.Request.RequestContext.RouteData.Values["Controller"]);
+    string ControllerName = Convert.ToString(HttpContext.Current.Request.RequestContext.RouteData.Values["Controller"]); // 抓取使用的Controller選取Layout
     switch (ControllerName.ToUpper())
     {
-        case "User":
-            Layout = "~/Views/Shared/_UserLayout.cshtml";
+        case "USER":
+            Layout = "~/Views/Shared/_UserLayout.cshtml"; // 一般使用者的Layout
             break;
 
-        case "Admin":
-            Layout = "~/Views/Shared/_AdminLayout.cshtml";
+        case "ADMIN":
+            Layout = "~/Views/Shared/_AdminLayout.cshtml"; // 管理者的Layout
             break;
 
         default:
-            Layout = "~/Views/Shared/_Layout.cshtml";
+            Layout = "~/Views/Shared/_Layout.cshtml"; //無登入狀態的Layout
             break;
     }
 }   

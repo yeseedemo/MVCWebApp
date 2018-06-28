@@ -1,0 +1,40 @@
+﻿@{
+    /**/
+
+    ViewBag.Title = "Sign in";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@Styles.Render("~/Content/css")
+@Scripts.Render("~/bundles/modernizr")
+
+<form style="margin-left:10px;" method="post" action="">
+    <!-- 使用post 傳遞使用者帳密-->
+    <h1>請輸入使用者資料</h1>
+    <div>
+        <span style="color:red">@ViewBag.Msg</span>  <!-- 錯誤提示用的 -->
+    </div>
+    <div class="form-group">
+        <label for="exampleInputEmail1">帳號</label>
+        <input type="text" class="form-control" id="Userid" name="uid" placeholder="輸入帳號" value="">
+        <small id="emailHelp" class="form-text text-muted">請輸入英數字</small>
+    </div>
+    <div class="form-group">
+        <label for="exampleInputPassword1">新的密碼</label>
+        <input type="password" class="form-control" id="Userpw1" name="upw" placeholder="輸入密碼" value="">
+    </div>
+    <div class="form-group">
+        <label for="exampleInputPassword1">再次確認</label>
+        <input type="password" class="form-control" id="Userpw2" name="repw" placeholder="輸入密碼" value="">
+    </div>
+    <button type="submit" class="btn btn-primary">確定</button>
+    <button type="reset" class="btn btn-warning">清除</button>
+</form>
+
+<!--
+    參考資料
+    https://ithelp.ithome.com.tw/articles/10195671 << 註冊頁製作
+    https://ithelp.ithome.com.tw/users/20105694/ironman/1329?page=3 << 系列
+
+    https://read01.com/zh-tw/J0N7ED.html#.WzSJmNIzYdU << 加密相關
+*-->
