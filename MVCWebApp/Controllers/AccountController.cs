@@ -7,6 +7,7 @@ using Npgsql;
 using System.Configuration;
 using MVCWebApp.Models;
 using System.Data;
+using System.Security.Cryptography;
 
 namespace MVCWebApp.Controllers
 {
@@ -40,48 +41,58 @@ namespace MVCWebApp.Controllers
             string userid = post.uid;
             string userpw = post.upw;
             string userpw2 = post.repw;
+            string email = post.email;
+
+
 
             //呼叫創建
-            if (goSignin(userid, userpw , userpw2))
+            if (goSignin(userid, userpw, userpw2, email))
             {
-                TempData["Msg2"] = "註冊成功，請登入"; // 成功註冊，請用戶登入
+                TempData["Msg2"] = "註冊成功，請登入！"; // 成功註冊，請用戶登入
                 Response.Redirect("~/Account/Login");
                 return new EmptyResult();
             }
             else
             {
-                ViewBag.Msg = "兩次密碼不一致，請重新輸入"; // 帳號或密碼沒有對應
+                ViewBag.Msg = "註冊失敗，請檢查一下欄位！"; // 帳號或密碼沒有對應
                 return View();
             }
         }
         //確認兩次密碼一致並註冊
-        public bool goSignin(string uid, string upw1, string upw2)
+        public bool goSignin(string uid, string upw1, string upw2, string email)
         {
-            if (upw1 == upw2) //驗證兩次密碼是否一致
+
+            try
             {
-                try
+                if (upw1 != upw2)
                 {
-                    using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
+                    return false;
+                }
+                using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
+                {
+                    connection.Open();
+                    // 密碼用SHA256轉換
+                    string upwsha256 = ComputeSha256Hash(upw1);
+                    string strSQL = @"INSERT INTO public.account(""STR_userid"", ""STR_passwd"", ""STR_permission"",""STR_email"")VALUES ( @account, @password,'USER',@email ); "; //新增一筆用戶資料
+                    using (NpgsqlCommand cmd = new NpgsqlCommand(strSQL, connection))
                     {
-                        connection.Open();
-                        // 之後密碼用SHA256轉換
-                        string strSQL = @"INSERT INTO public.account(""STR_userid"", ""STR_passwd"", ""STR_permission"")VALUES ('" + uid + @"', '" + upw1 + @"','USER' ); "; //新增一筆用戶資料
-                        NpgsqlCommand cmd = new NpgsqlCommand(strSQL, connection);
+                        // 預防SQL Injection
+                        cmd.Parameters.AddWithValue("@account", uid);
+                        cmd.Parameters.AddWithValue("@password", upwsha256);
+                        cmd.Parameters.AddWithValue("@email", email);
+                        cmd.ExecuteNonQuery();
                         cmd.Dispose();
                         connection.Close();
                         return true;
                     }
                 }
-                catch(Exception ex)
-                {
-                    string error = ex.ToString();
-                    return false;
-                }
-                    
             }
-            return false; //兩次密碼不同
+            catch (Exception ex)
+            {
+                string error = ex.ToString();
+                return false;
+            }
         }
-
         // 正常登入頁面(get模式)
         public ActionResult Login()
         {
@@ -99,8 +110,8 @@ namespace MVCWebApp.Controllers
                 }
             }
             return View();
-        }        
-        
+        }
+
         // 接收並驗證(post模式)
         [HttpPost]
         public ActionResult Login(ACCOUNT post)
@@ -112,13 +123,13 @@ namespace MVCWebApp.Controllers
             if (CheckLoginData(userid, userpw))
             {
                 // 選擇群組
-                switch(AccountController.temp)
+                switch (AccountController.temp)
                 {
-                    case "USER" :
+                    case "USER":
                         Response.Redirect("~/User/DB_User");
                         return new EmptyResult();
 
-                    case "ADMIN" :
+                    case "ADMIN":
                         Response.Redirect("~/Admin/DB_Admin");
                         return new EmptyResult();
                 }
@@ -131,7 +142,7 @@ namespace MVCWebApp.Controllers
                 return View();
             }
         }
-        
+
         // 確認帳號密碼是否相符
         public bool CheckLoginData(string uid, string upw)
         {
@@ -140,18 +151,26 @@ namespace MVCWebApp.Controllers
                 using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
                 {
                     connection.Open();
-                    // 之後要先把密碼用SHA256轉換
-                    string strSQL = @"SELECT * FROM public.account WHERE ""STR_userid"" = '" + uid + @"' AND ""STR_passwd"" = '" + upw + "';"; //找尋帳號與密碼都相同的資料 (有漏洞待修改)
+                    // 密碼用SHA256轉換
+                    string upwsha256 = ComputeSha256Hash(upw);
+                    string strSQL = @"SELECT * FROM public.account WHERE ""STR_userid"" = @account AND ""STR_passwd"" = @password;"; //找尋帳號與密碼都相同的資料
+
                     using (var cmd = new NpgsqlCommand(strSQL, connection))
-                    using (NpgsqlDataReader reader = cmd.ExecuteReader())
                     {
-                        if (reader.Read()) {
+                        // 預防SQL Injection
+                        cmd.Parameters.AddWithValue("@account", uid);
+                        cmd.Parameters.AddWithValue("@password", upwsha256);
+                        NpgsqlDataReader reader = cmd.ExecuteReader();
+
+                        if (reader.Read())
+                        {
                             AccountController.temp = reader["STR_permission"].ToString(); // 抓取群組
                             Session["key"] = temp; // Session狀態加入用戶id
                             cmd.Dispose();
                             connection.Close();
                             return true;
                         }
+
                     }
                 }
                 return false;
@@ -163,15 +182,61 @@ namespace MVCWebApp.Controllers
                 return false;
             }
         }
-        
+
         // 登出
         public ActionResult Logout()
         {
             Session.Clear();
             return View();
         }
+
+        // 確認帳號沒有重複
+        /*
+        [HttpPost]
+        public ActionResult CheckAccount(string uid)
+        */
+        public ActionResult CheckAccount(ACCOUNT uid)
+        {
+            using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
+            {
+                string strSQL = @"SELECT * FROM public.account WHERE ""STR_userid"" = @account";
+                using (var cmd = new NpgsqlCommand(strSQL, connection))
+                {
+                    // 預防SQL Injection
+                    cmd.Parameters.AddWithValue("@account", uid);
+                    NpgsqlDataReader reader = cmd.ExecuteReader();
+                    if (reader.Read())
+                    {
+                        return Json("用户名" + uid + "已存在", JsonRequestBehavior.AllowGet);
+                    }
+                }
+            }
+            return Json(true, JsonRequestBehavior.AllowGet);
+        }
+
+
+        // 把密碼用SHA256計算
+        static string ComputeSha256Hash(string rawData)
+        {
+            // Create a SHA256   
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                // ComputeHash - returns byte array  
+                byte[] bytes = sha256Hash.ComputeHash(System.Text.Encoding.UTF8.GetBytes(rawData));
+
+                // Convert byte array to a string   
+                var builder = new System.Text.StringBuilder();
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    builder.Append(bytes[i].ToString("x2"));
+                }
+
+                return builder.ToString();
+            }
+        }
     }
 }
+
 
 /*
  *  參考資料
@@ -179,3 +244,5 @@ namespace MVCWebApp.Controllers
  *  https://ithelp.ithome.com.tw/users/20105694/ironman/1329?page=3 <<系列
  * https://read01.com/zh-tw/J0N7ED.html#.WzSJmNIzYdU << 加密相關
 */
+
+

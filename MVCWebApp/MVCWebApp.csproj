@@ -189,6 +189,7 @@
     <Content Include="ApplicationInsights.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="App_Data\mysql" />
     <None Include="Scripts\jquery-3.3.1.intellisense.js" />
     <Content Include="Scripts\jquery-3.3.1.js" />
     <Content Include="Scripts\jquery-3.3.1.min.js" />
@@ -220,9 +221,9 @@
     <Content Include="Views\Shared\_UserLayout.cshtml" />
     <Content Include="Views\Admin\DB_Admin.cshtml" />
     <Content Include="Views\Account\Signin.cshtml" />
+    <Content Include="Views\Admin\PER_Admin.cshtml" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="App_Data\" />
     <Folder Include="Views\Default\" />
   </ItemGroup>
   <ItemGroup>

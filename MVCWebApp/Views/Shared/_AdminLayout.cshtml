@@ -21,7 +21,10 @@
             <div class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
                     <li>@Html.ActionLink("資料庫管理", "DB_Admin", "Admin")</li>
-                    <!-- <li>@Html.ActionLink("群組管理", "PER_Admin", "Admin")</li> 之後加入使用者群組管理介面 -->
+                    <li>@Html.ActionLink("群組管理", "PER_Admin", "Admin")</li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <!--我想在這邊放使用者名稱提示-->
                     <li>@Html.ActionLink("登出", "Logout", "Account")</li>
                 </ul>
             </div>

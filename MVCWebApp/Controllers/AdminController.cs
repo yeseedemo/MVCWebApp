@@ -24,5 +24,9 @@ namespace MVCWebApp.Controllers
                     return new EmptyResult();
             }
         }
+        public ActionResult RER_Admin(int? page)
+        {
+            return View();
+        }
     }
 }
