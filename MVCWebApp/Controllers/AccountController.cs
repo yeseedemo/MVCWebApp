@@ -49,8 +49,9 @@ namespace MVCWebApp.Controllers
             if (goSignin(userid, userpw, userpw2, email))
             {
                 TempData["Msg2"] = "註冊成功，請登入！"; // 成功註冊，請用戶登入
-                Response.Redirect("~/Account/Login");
-                return new EmptyResult();
+        
+                return new RedirectResult(Url.Action("Login", "Account"));
+               
             }
             else
             {
@@ -197,13 +198,17 @@ namespace MVCWebApp.Controllers
         {
             using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
             {
-                string strSQL = @"SELECT * FROM public.account WHERE ""STR_userid"" = @account";
-                using (var cmd = new NpgsqlCommand(strSQL, connection))
+                string strSQL = @"SELECT ""STR_userid"", ""STR_passwd"", ""STR_permission"", ""STR_email"" from public.Account WHERE ""STR_userid""=@account";
+
+                 using (var cmd = new NpgsqlCommand(strSQL, connection))
                 {
                     // 預防SQL Injection
-                    cmd.Parameters.AddWithValue("@account", uid);
-                    NpgsqlDataReader reader = cmd.ExecuteReader();
-                    if (reader.Read())
+                    cmd.Parameters.Add(new NpgsqlParameter("@account", uid.Trim()));
+                    connection.Open();
+
+                    var obj = cmd.ExecuteScalar();
+ 
+                        if (obj != null)
                     {
                         return Json("用户名" + uid + "已存在", JsonRequestBehavior.AllowGet);
                     }
