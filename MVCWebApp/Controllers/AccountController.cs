@@ -191,11 +191,9 @@ namespace MVCWebApp.Controllers
         }
 
         // 確認帳號沒有重複
-        /*
+        
         [HttpPost]
         public ActionResult CheckAccount(string uid)
-        */
-        public ActionResult CheckAccount(ACCOUNT uid)
         {
             using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
             {
