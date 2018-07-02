@@ -45,7 +45,7 @@ namespace MVCWebApp.Controllers
 
 
             //呼叫創建
-            if (goSignin(userid, userpw, userpw2, email))
+            if (goSignin(userid, userpw, email))
             {
                 TempData["Msg2"] = "註冊成功，請登入！"; // 成功註冊，請用戶登入
                 Response.Redirect("~/Account/Login");
@@ -163,7 +163,8 @@ namespace MVCWebApp.Controllers
                         if (reader.Read())
                         {
                             AccountController.temp = reader["STR_permission"].ToString(); // 抓取群組
-                            Session["key"] = temp; // Session狀態加入用戶id
+                            Session["key"] = temp; // Session狀態加入用戶群組
+                            Session["uid"] = uid; // Session狀態加入用戶id
                             cmd.Dispose();
                             connection.Close();
                             return true;

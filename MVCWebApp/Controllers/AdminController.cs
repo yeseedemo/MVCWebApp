@@ -1,13 +1,16 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using PagedList;
+using ServiceStack;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Web;
 using System.Web.Mvc;
 
 namespace MVCWebApp.Controllers
 {
     public class AdminController : Controller
-    {
+    { 
         // GET: Admin
         public ActionResult DB_Admin()
         {
@@ -24,9 +27,39 @@ namespace MVCWebApp.Controllers
                     return new EmptyResult();
             }
         }
-        public ActionResult RER_Admin(int? page)
+        public ActionResult RER_Admin()
         {
-            return View();
+            //確保別的使用者或未登入者不會進來
+            switch (Session["key"])
+            {
+                case "USER":
+                    Response.Redirect("~/User/DB_User");
+                    return new EmptyResult();
+                case "ADMIN":
+                    return View();
+                default:
+                    Response.Redirect("~/Account/Login");
+                    return new EmptyResult();
+            }
+        }
+
+        public ActionResult USR_Admin()
+        {
+            //確保別的使用者或未登入者不會進來
+            
+
+            switch (Session["key"])
+            {
+                case "USER":
+                    Response.Redirect("~/User/DB_User");
+                    return new EmptyResult();
+                case "ADMIN":
+                    //var model = db.people.ToList();
+                    return View();
+                default:
+                    Response.Redirect("~/Account/Login");
+                    return new EmptyResult();
+            }
         }
     }
 }
