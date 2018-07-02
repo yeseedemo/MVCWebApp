@@ -16,7 +16,7 @@ namespace MVCWebApp.Models
         [RegularExpression(@"[a-zA-Z0-9]*$", ErrorMessage = "帳號僅能有英文或數字")]
         [MaxLength(20, ErrorMessage = "帳號最多20個字")]
         [MinLength(8, ErrorMessage = "帳號最少8個字")]
-        [System.Web.Mvc.Remote("CheckAccount", "Account",HttpMethod = "POST", ErrorMessage = "Email already exists")]
+        [Remote("CheckAccount", "Account", HttpMethod = "POST"/*, ErrorMessage = "Email already exists"*/)] // 沒辦法運行
         public String uid { get; set; } //不要特殊符號
 
         //密碼限制 長度 
