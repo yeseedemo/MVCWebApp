@@ -48,8 +48,7 @@ namespace MVCWebApp.Controllers
             if (goSignin(userid, userpw, email))
             {
                 TempData["Msg2"] = "註冊成功，請登入！"; // 成功註冊，請用戶登入
-                Response.Redirect("~/Account/Login");
-                return new EmptyResult();
+                return new RedirectResult(Url.Action("Login", "Account"));
             }
             else
             {
@@ -99,12 +98,9 @@ namespace MVCWebApp.Controllers
                 switch (Session["key"])
                 {
                     case "USER":
-                        Response.Redirect("~/User/DB_User");
-                        return new EmptyResult();
-
+                        return new RedirectResult(Url.Action("DB_User", "User"));
                     case "ADMIN":
-                        Response.Redirect("~/Admin/DB_Admin");
-                        return new EmptyResult();
+                        return new RedirectResult(Url.Action("DB_Admin", "Admin"));
                 }
             }
             return View();
@@ -124,12 +120,9 @@ namespace MVCWebApp.Controllers
                 switch (AccountController.temp)
                 {
                     case "USER":
-                        Response.Redirect("~/User/DB_User");
-                        return new EmptyResult();
-
+                        return new RedirectResult(Url.Action("DB_User", "User"));
                     case "ADMIN":
-                        Response.Redirect("~/Admin/DB_Admin");
-                        return new EmptyResult();
+                        return new RedirectResult(Url.Action("DB_Admin", "Admin"));
                 }
                 ViewBag.Msg = "此帳號發生問題，請聯絡管理人員"; // 沒有群組對應
                 return View();
@@ -232,6 +225,22 @@ namespace MVCWebApp.Controllers
                 return builder.ToString();
             }
         }
+        // 個人資訊頁面(get模式)
+        public ActionResult Profile()
+        {
+            if (Session["key"] == null) //如果有Session直接轉跳X1
+            {
+                return new RedirectResult(Url.Action("Login", "Account"));
+            }
+            return View();
+        }
+        // 個人資訊頁面(post模式)
+        [HttpPost]
+        public ActionResult Profile(ACCOUNT post)
+        {
+            return View();
+        }
+
     }
 }
 

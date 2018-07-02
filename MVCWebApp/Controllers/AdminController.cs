@@ -18,13 +18,11 @@ namespace MVCWebApp.Controllers
             switch (Session["key"])
             {
                 case "USER":
-                    Response.Redirect("~/User/DB_User");
-                    return new EmptyResult();
+                    return new RedirectResult(Url.Action("DB_User", "User"));
                 case "ADMIN":
                     return View();
                 default:
-                    Response.Redirect("~/Account/Login");
-                    return new EmptyResult();
+                    return new RedirectResult(Url.Action("Login", "Account"));
             }
         }
         public ActionResult RER_Admin()
@@ -33,13 +31,11 @@ namespace MVCWebApp.Controllers
             switch (Session["key"])
             {
                 case "USER":
-                    Response.Redirect("~/User/DB_User");
-                    return new EmptyResult();
+                    return new RedirectResult(Url.Action("DB_User", "User"));
                 case "ADMIN":
                     return View();
                 default:
-                    Response.Redirect("~/Account/Login");
-                    return new EmptyResult();
+                    return new RedirectResult(Url.Action("Login", "Account"));
             }
         }
 

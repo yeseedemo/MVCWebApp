@@ -18,11 +18,9 @@ namespace MVCWebApp.Controllers
                     return View();
 
                 case "ADMIN":
-                    Response.Redirect("~/Admin/DB_Admin");
-                    return new EmptyResult();
+                    return new RedirectResult(Url.Action("DB_Admin", "Admin"));
                 default:
-                    Response.Redirect("~/Account/Login");
-                    return new EmptyResult();
+                    return new RedirectResult(Url.Action("Login", "Account"));
             }
         }
     }

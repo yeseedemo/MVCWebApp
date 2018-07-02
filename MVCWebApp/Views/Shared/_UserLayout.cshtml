@@ -23,7 +23,7 @@
                     <li>@Html.ActionLink("資料庫管理", "DB_User", "User")</li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
-                    <!--我想在這邊放使用者名稱提示-->
+                    <li>@Html.ActionLink((string)Session["uid"], "Profile", "Account")</li>
                     <li>@Html.ActionLink("登出", "Logout", "Account")</li>
                 </ul>
             </div>

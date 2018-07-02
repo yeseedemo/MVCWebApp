@@ -246,6 +246,7 @@
     <Content Include="Views\Account\Signin.cshtml" />
     <Content Include="Views\Admin\PER_Admin.cshtml" />
     <Content Include="Views\Admin\USR_Admin.cshtml" />
+    <Content Include="Views\Account\Profile.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Views\Default\" />
