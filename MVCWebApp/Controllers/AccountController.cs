@@ -40,12 +40,13 @@ namespace MVCWebApp.Controllers
         {
             string userid = post.uid;
             string userpw = post.upw;
+            string userpw2 = post.repw;
             string email = post.email;
 
 
 
             //呼叫創建
-            if (goSignin(userid, userpw,/* userpw2,*/ email))
+            if (goSignin(userid, userpw, userpw2, email))
             {
                 TempData["Msg2"] = "註冊成功，請登入！"; // 成功註冊，請用戶登入
                 Response.Redirect("~/Account/Login");
@@ -58,33 +59,33 @@ namespace MVCWebApp.Controllers
             }
         }
         //確認兩次密碼一致並註冊
-        public bool goSignin(string uid, string upw1,/* string upw2,*/ string email)
+        public bool goSignin(string uid, string upw1, string upw2, string email)
         {
 
             try
             {
-                if (ModelState.IsValid) // 確保在model那邊驗證都過
+                if (upw1 != upw2)
                 {
-                    using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
+                    return false;
+                }
+                using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
+                {
+                    connection.Open();
+                    // 密碼用SHA256轉換
+                    string upwsha256 = ComputeSha256Hash(upw1);
+                    string strSQL = @"INSERT INTO public.account(""STR_userid"", ""STR_passwd"", ""STR_permission"",""STR_email"")VALUES ( @account, @password,'USER',@email ); "; //新增一筆用戶資料
+                    using (NpgsqlCommand cmd = new NpgsqlCommand(strSQL, connection))
                     {
-                        connection.Open();
-                        // 密碼用SHA256轉換
-                        string upwsha256 = ComputeSha256Hash(upw1);
-                        string strSQL = @"INSERT INTO public.account(""STR_userid"", ""STR_passwd"", ""STR_permission"",""STR_email"")VALUES ( @account, @password,'USER',@email ); "; //新增一筆用戶資料
-                        using (NpgsqlCommand cmd = new NpgsqlCommand(strSQL, connection))
-                        {
-                            // 預防SQL Injection
-                            cmd.Parameters.AddWithValue("@account", uid);
-                            cmd.Parameters.AddWithValue("@password", upwsha256);
-                            cmd.Parameters.AddWithValue("@email", email);
-                            cmd.ExecuteNonQuery();
-                            cmd.Dispose();
-                            connection.Close();
-                            return true;
-                        }
+                        // 預防SQL Injection
+                        cmd.Parameters.AddWithValue("@account", uid);
+                        cmd.Parameters.AddWithValue("@password", upwsha256);
+                        cmd.Parameters.AddWithValue("@email", email);
+                        cmd.ExecuteNonQuery();
+                        cmd.Dispose();
+                        connection.Close();
+                        return true;
                     }
                 }
-                return false;
             }
             catch (Exception ex)
             {
@@ -190,10 +191,10 @@ namespace MVCWebApp.Controllers
         }
 
         // 確認帳號沒有重複
+        
         [HttpPost]
-        public JsonResult CheckAccount(string uid)
+        public ActionResult CheckAccount(string uid)
         {
-            /*
             using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
             {
                 string strSQL = @"SELECT * FROM public.account WHERE ""STR_userid"" = @account";
@@ -208,7 +209,6 @@ namespace MVCWebApp.Controllers
                     }
                 }
             }
-            */
             return Json(true, JsonRequestBehavior.AllowGet);
         }
 
