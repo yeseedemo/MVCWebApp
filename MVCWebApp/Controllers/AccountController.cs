@@ -40,7 +40,6 @@ namespace MVCWebApp.Controllers
         {
             string userid = post.uid;
             string userpw = post.upw;
-            string userpw2 = post.repw;
             string email = post.email;
 
 
@@ -59,33 +58,32 @@ namespace MVCWebApp.Controllers
             }
         }
         //確認兩次密碼一致並註冊
-        public bool goSignin(string uid, string upw1, string upw2, string email)
+        public bool goSignin(string uid, string upw1, string email)
         {
-
             try
             {
-                if (upw1 != upw2)
+                if (ModelState.IsValid) // 如果model沒有報錯誤訊息才能通過
                 {
-                    return false;
-                }
-                using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
-                {
-                    connection.Open();
-                    // 密碼用SHA256轉換
-                    string upwsha256 = ComputeSha256Hash(upw1);
-                    string strSQL = @"INSERT INTO public.account(""STR_userid"", ""STR_passwd"", ""STR_permission"",""STR_email"")VALUES ( @account, @password,'USER',@email ); "; //新增一筆用戶資料
-                    using (NpgsqlCommand cmd = new NpgsqlCommand(strSQL, connection))
+                    using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
                     {
-                        // 預防SQL Injection
-                        cmd.Parameters.AddWithValue("@account", uid);
-                        cmd.Parameters.AddWithValue("@password", upwsha256);
-                        cmd.Parameters.AddWithValue("@email", email);
-                        cmd.ExecuteNonQuery();
-                        cmd.Dispose();
-                        connection.Close();
-                        return true;
+                        connection.Open();
+                        // 密碼用SHA256轉換
+                        string upwsha256 = ComputeSha256Hash(upw1);
+                        string strSQL = @"INSERT INTO public.account(""STR_userid"", ""STR_passwd"", ""STR_permission"",""STR_email"")VALUES ( @account, @password,'USER',@email ); "; //新增一筆用戶資料
+                        using (NpgsqlCommand cmd = new NpgsqlCommand(strSQL, connection))
+                        {
+                            // 預防SQL Injection
+                            cmd.Parameters.AddWithValue("@account", uid);
+                            cmd.Parameters.AddWithValue("@password", upwsha256);
+                            cmd.Parameters.AddWithValue("@email", email);
+                            cmd.ExecuteNonQuery();
+                            cmd.Dispose();
+                            connection.Close();
+                            return true;
+                        }
                     }
                 }
+                return false;
             }
             catch (Exception ex)
             {
@@ -197,6 +195,7 @@ namespace MVCWebApp.Controllers
         {
             using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
             {
+                connection.Open();
                 string strSQL = @"SELECT * FROM public.account WHERE ""STR_userid"" = @account";
                 using (var cmd = new NpgsqlCommand(strSQL, connection))
                 {
