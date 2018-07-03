@@ -190,6 +190,7 @@
     </Compile>
     <Compile Include="Models\ACCOUNT.cs" />
     <Compile Include="Models\APILOG.cs" />
+    <Compile Include="Models\ProfileEdit.cs" />
     <Compile Include="Models\SYS_FUNCTION.cs" />
     <Compile Include="Models\SYS_GROUP_PERMISSION.cs" />
     <Compile Include="Models\SYS_USER_GROUP_RELATION .cs" />

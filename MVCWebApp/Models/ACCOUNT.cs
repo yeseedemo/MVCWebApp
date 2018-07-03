@@ -34,7 +34,7 @@ namespace MVCWebApp.Models
         [System.ComponentModel.DataAnnotations.Compare("upw", ErrorMessage = "密碼與確認密碼不符")]
         public String repw { get; set; } //與第一次相同
 
-        public String per { get; set; }
+        public String per { get; set; } //可能用不到
 
         // 信箱驗證
         [Required]

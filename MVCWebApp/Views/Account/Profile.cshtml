@@ -1,8 +1,7 @@
-﻿@model MVCWebApp.Models.ACCOUNT
+﻿@model MVCWebApp.Models.ProfileEdit
 
 @{
-    ViewBag.Title = "Sign in";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Profile Edit";
 }
 
 @Styles.Render("~/Content/css")
@@ -11,45 +10,29 @@
 <h3> 這裡是 @Session["uid"] 的個人資訊管理頁</h3>
 
 <h3>目前使用者群組為：@Session["key"]</h3>
-<!--
->> 帳號
->> 密碼1
->> 密碼2
->> email
 
->> 確認修改
->> 刪除帳號
--->
 <!--
     摺疊語法
     http://www.runoob.com/bootstrap/bootstrap-collapse-plugin.html
     -->
 <form style="margin-left:10px;" method="post" action="">
     <div>
-        <span style="color:red">@ViewBag.Msg</span>  <!-- 錯誤提示用的 -->
+        <span style="color:red">@ViewBag.Msg3</span>  <!-- 錯誤提示用的 -->
     </div>
     <div class="panel-group" id="accordion">
-<!--第一個折疊-->
+        <!--折疊 密碼-->
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h4 class="panel-title">
                     <a data-toggle="collapse" data-parent="#accordion"
                        href="#collapseOne">
-                        修改帳號
+                        修改密碼
                     </a>
                 </h4>
             </div>
-            <div id="collapseOne" class="panel-collapse collapse in">
+            <div id="collapseOne" class="panel-collapse collapse">
                 <div class="panel-body">
-                    <!--輸入帳號-->
-                    <div class="form-group">
-                        @Html.LabelFor(model => model.uid, htmlAttributes: new { @class = "control-label col-md-2" }) <!-- 標題 -->
-                        <div class="col-md-10">
-                            @Html.EditorFor(model => model.uid, new { htmlAttributes = new { @class = "form-control" } }) <!-- 資料輸入欄位 -->
-                            @Html.ValidationMessageFor(model => model.uid, "", new { @class = "text-danger" }) <!-- 警告訊息 -->
-                        </div>
-                    </div>
-                    <!--輸入密碼-->
+                    <!-- 第一次密碼 -->
                     <div class="form-group">
                         @Html.LabelFor(model => model.upw, htmlAttributes: new { @class = "control-label col-md-2" }) <!-- 標題 -->
                         <div class="col-md-10">
@@ -57,57 +40,67 @@
                             @Html.ValidationMessageFor(model => model.upw, "", new { @class = "text-danger" }) <!-- 警告訊息 -->
                         </div>
                     </div>
-                    <!--送出-->
-                    <button type="submit" class="btn btn-primary">確定</button>
-                    <!--結束-->
+                    <!-- 第二次密碼 -->
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.repw, htmlAttributes: new { @class = "control-label col-md-2" }) <!-- 標題 -->
+                        <div class="col-md-10">
+                            @Html.EditorFor(model => model.repw, new { htmlAttributes = new { @class = "form-control" } }) <!-- 資料輸入欄位 -->
+                            @Html.ValidationMessageFor(model => model.repw, "", new { @class = "text-danger" }) <!-- 警告訊息 -->
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-<!--第二個折疊-->
+        <!--摺疊 信箱-->
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h4 class="panel-title">
                     <a data-toggle="collapse" data-parent="#accordion"
                        href="#collapseTwo">
-                        修改密碼
+                        修改信箱
                     </a>
                 </h4>
             </div>
             <div id="collapseTwo" class="panel-collapse collapse">
                 <div class="panel-body">
-                    密碼輸入兩次
+                    <!-- 輸入信箱 -->
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.email, htmlAttributes: new { @class = "control-label col-md-2" }) <!-- 標題 -->
+                        <div class="col-md-10">
+                            @Html.EditorFor(model => model.email, new { htmlAttributes = new { @class = "form-control" } }) <!-- 資料輸入欄位 -->
+                            @Html.ValidationMessageFor(model => model.email, "", new { @class = "text-danger" }) <!-- 警告訊息 -->
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-<!--第三個折疊-->
+        <!--折疊 刪除-->
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h4 class="panel-title">
                     <a data-toggle="collapse" data-parent="#accordion"
                        href="#collapseThree">
-                        修改信箱
+                        刪除帳號
                     </a>
                 </h4>
             </div>
             <div id="collapseThree" class="panel-collapse collapse">
                 <div class="panel-body">
-                    輸入信箱
+                    <!-- 確認刪除碼 -->
+                    <input type="checkbox" value="delete" name="deleteAC"> 確認刪除<br>
                 </div>
             </div>
         </div>
-<!--第四個折疊-->
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h4 class="panel-title">
-                        <a data-toggle="collapse" data-parent="#accordion"
-                           href="#collapseFour">
-                            刪除帳號
-                        </a>
-                    </h4>
-                </div>
-                <div id="collapseFour" class="panel-collapse collapse">
-                    <div class="panel-body">
-                        輸入密碼
-                    </div>
-                </div>
-            </div>
+        <!--輸入密碼-->
+    </div>
+    <!-- 通用密碼 -->
+    <div class="form-group">
+        @Html.LabelFor(model => model.oldpw, htmlAttributes: new { @class = "control-label col-md-2" }) <!-- 標題 -->
+        <div class="col-md-10">
+            @Html.EditorFor(model => model.oldpw, new { htmlAttributes = new { @class = "form-control" } }) <!-- 資料輸入欄位 -->
+            @Html.ValidationMessageFor(model => model.oldpw, "", new { @class = "text-danger" }) <!-- 警告訊息 -->
+        </div>
+    </div>
+    <!--送出-->
+    <button type="submit" class="btn btn-primary">確定</button>
+</form>

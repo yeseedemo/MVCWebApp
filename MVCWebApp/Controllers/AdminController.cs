@@ -42,19 +42,14 @@ namespace MVCWebApp.Controllers
         public ActionResult USR_Admin()
         {
             //確保別的使用者或未登入者不會進來
-            
-
             switch (Session["key"])
             {
                 case "USER":
-                    Response.Redirect("~/User/DB_User");
-                    return new EmptyResult();
+                    return new RedirectResult(Url.Action("DB_User", "User"));
                 case "ADMIN":
-                    //var model = db.people.ToList();
                     return View();
                 default:
-                    Response.Redirect("~/Account/Login");
-                    return new EmptyResult();
+                    return new RedirectResult(Url.Action("Login", "Account"));
             }
         }
     }

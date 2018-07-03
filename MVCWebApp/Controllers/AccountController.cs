@@ -23,12 +23,9 @@ namespace MVCWebApp.Controllers
                 switch (Session["key"])
                 {
                     case "USER":
-                        Response.Redirect("~/User/DB_User");
-                        return new EmptyResult();
-
+                        return new RedirectResult(Url.Action("DB_User", "User"));
                     case "ADMIN":
-                        Response.Redirect("~/Admin/DB_Admin");
-                        return new EmptyResult();
+                        return new RedirectResult(Url.Action("DB_Admin", "Admin"));
                 }
             }
             return View();
@@ -68,7 +65,7 @@ namespace MVCWebApp.Controllers
                         connection.Open();
                         // 密碼用SHA256轉換
                         string upwsha256 = ComputeSha256Hash(upw1);
-                        string strSQL = @"INSERT INTO public.account(""STR_userid"", ""STR_passwd"", ""STR_permission"",""STR_email"")VALUES ( @account, @password,'USER',@email ); "; //新增一筆用戶資料
+                        string strSQL = @"INSERT INTO public.account(str_userid, str_passwd, str_permission,str_email)VALUES ( @account, @password,'USER',@email ); "; //新增一筆用戶資料
                         using (NpgsqlCommand cmd = new NpgsqlCommand(strSQL, connection))
                         {
                             // 預防SQL Injection
@@ -144,7 +141,7 @@ namespace MVCWebApp.Controllers
                     connection.Open();
                     // 密碼用SHA256轉換
                     string upwsha256 = ComputeSha256Hash(upw);
-                    string strSQL = @"SELECT * FROM public.account WHERE ""STR_userid"" = @account AND ""STR_passwd"" = @password;"; //找尋帳號與密碼都相同的資料
+                    string strSQL = @"SELECT str_userid, str_passwd ,str_permission FROM public.account WHERE str_userid = @account AND str_passwd = @password;"; //找尋帳號與密碼都相同的資料
 
                     using (var cmd = new NpgsqlCommand(strSQL, connection))
                     {
@@ -155,7 +152,7 @@ namespace MVCWebApp.Controllers
 
                         if (reader.Read())
                         {
-                            AccountController.temp = reader["STR_permission"].ToString(); // 抓取群組
+                            AccountController.temp = reader["str_permission"].ToString(); // 抓取群組
                             Session["key"] = temp; // Session狀態加入用戶群組
                             Session["uid"] = uid; // Session狀態加入用戶id
                             cmd.Dispose();
@@ -190,7 +187,7 @@ namespace MVCWebApp.Controllers
             using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
             {
                 connection.Open();
-                string strSQL = @"SELECT * FROM public.account WHERE ""STR_userid"" = @account";
+                string strSQL = @"SELECT str_userid FROM public.account WHERE str_userid = @account";
                 using (var cmd = new NpgsqlCommand(strSQL, connection))
                 {
                     // 預防SQL Injection
@@ -236,8 +233,105 @@ namespace MVCWebApp.Controllers
         }
         // 個人資訊頁面(post模式)
         [HttpPost]
-        public ActionResult Profile(ACCOUNT post)
+        public ActionResult Profile(ProfileEdit post)
         {
+            string oldid = (string)Session["uid"]; //舊ID
+            string newrpw = post.upw; //新密碼
+            string oldrpw = post.oldpw; //舊密碼
+            string newemail = post.email; //新電子郵件
+            string delete = post.deleteAC; //帳號刪除
+
+            using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
+            {
+                connection.Open();
+                // 密碼用SHA256轉換
+                string upwsha256 = ComputeSha256Hash(oldrpw);
+                string strSQL = @"SELECT str_userid, str_passwd FROM public.account WHERE str_userid = @account AND str_passwd = @password;"; //找尋帳號與密碼都相同的資料
+
+                using (var cmd = new NpgsqlCommand(strSQL, connection))
+                {
+                    // 預防SQL Injection
+                    cmd.Parameters.AddWithValue("@account", oldid);
+                    cmd.Parameters.AddWithValue("@password", upwsha256);
+                    NpgsqlDataReader reader = cmd.ExecuteReader();
+
+                    if (reader.Read()) //通過密碼驗證後
+                    {
+                        cmd.Dispose();
+                        connection.Close();
+                        //改密碼
+                        if (newrpw != null)
+                        {
+                            if (ModelState.IsValid)
+                            {
+                                connection.Open();
+                                string strSQL2 = @"UPDATE public.account SET str_passwd= @new WHERE str_userid= @old";
+                                using (var cmd2 = new NpgsqlCommand(strSQL2, connection))
+                                {
+                                    string newha256 = ComputeSha256Hash(newrpw);
+                                    cmd2.Parameters.AddWithValue("@new", newha256);
+                                    cmd2.Parameters.AddWithValue("@old", oldid);
+                                    cmd2.ExecuteNonQuery();
+                                    cmd2.Dispose();
+                                    connection.Close();
+                                    TempData["Msg2"] = "密碼修改完成，請重新登入！"; // 成功註冊，請用戶登入
+                                    Session.Clear();
+                                    return new RedirectResult(Url.Action("Login", "Account"));
+                                }
+                            }
+                            else
+                            {
+                                ViewBag.Msg3 = "輸入資料有誤，請重新輸入";
+                            }
+                        }
+                        //改電郵地址
+                        else if (newemail != null)
+                        {
+                            if (ModelState.IsValid)
+                            {
+                                connection.Open();
+                                string strSQL2 = @"UPDATE public.account SET str_email= @new WHERE str_userid= @old";
+                                using (var cmd2 = new NpgsqlCommand(strSQL2, connection))
+                                {
+                                    cmd2.Parameters.AddWithValue("@new", newemail);
+                                    cmd2.Parameters.AddWithValue("@old", oldid);
+                                    cmd2.ExecuteNonQuery();
+                                    cmd2.Dispose();
+                                    connection.Close();
+                                    TempData["Msg2"] = "電子信箱修改完成，請重新登入！"; // 成功註冊，請用戶登入
+                                    Session.Clear();
+                                    return new RedirectResult(Url.Action("Login", "Account"));
+                                }
+                            }
+                            else
+                            {
+                                ViewBag.Msg3 = "輸入資料有誤，請重新輸入";
+                            }
+                        }
+                        //確認刪除
+                        else if (delete != null)
+                        {
+                            connection.Open();
+                            string strSQL2 = @"DELETE FROM public.account WHERE str_userid= @old";
+                            using (var cmd2 = new NpgsqlCommand(strSQL2, connection))
+                            {
+                                cmd2.Parameters.AddWithValue("@old", oldid);
+                                cmd2.ExecuteNonQuery();
+                                cmd2.Dispose();
+                                connection.Close();
+                                TempData["Msg2"] = "帳號已刪除，感謝使用本系統！"; // 成功註冊，請用戶登入
+                                Session.Clear();
+                                return new RedirectResult(Url.Action("Login", "Account"));
+                            }
+                        }
+                        else
+                        {
+                            ViewBag.Msg3 = "沒有修改，資料未更變";
+                        }
+                    }
+
+                }
+            }
             return View();
         }
 
