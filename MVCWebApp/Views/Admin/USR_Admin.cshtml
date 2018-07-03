@@ -2,46 +2,5 @@
 @using PagedList.Mvc
 @model PagedList.StaticPagedList<MVCWebApp.Models.ACCOUNT>
 
-<h3> 這裡是USR的管理頁</h3>
-<!--
-@Html.PagedListPager((IPagedList)Model,
-        page => Url.Action("USR_Admin", new
-        {
-            page = page,
-            districts = ViewBag.SelectedDistrict,
-            types = ViewBag.SelectedType,
-            company = ViewBag.SelectedCompany
-        }),
-        PagedListRenderOptions.ClassicPlusFirstAndLast)
--->
-<table class="table table-striped table-hover">
-    <thead>
-        <tr style="background-color: #d3efff;">
-            <th>
-                @Html.DisplayNameFor(model => model.FirstOrDefault().uid)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.FirstOrDefault().per)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.FirstOrDefault().email)
-            </th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.uid)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.per)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.email)
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+<h4> 這裡是 @Session["uid"] 的Group管理頁</h4>
+<h4>權限為：@Session["key"]</h4>

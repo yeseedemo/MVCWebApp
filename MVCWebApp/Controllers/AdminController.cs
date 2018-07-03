@@ -25,19 +25,6 @@ namespace MVCWebApp.Controllers
                     return new RedirectResult(Url.Action("Login", "Account"));
             }
         }
-        public ActionResult RER_Admin()
-        {
-            //確保別的使用者或未登入者不會進來
-            switch (Session["key"])
-            {
-                case "USER":
-                    return new RedirectResult(Url.Action("DB_User", "User"));
-                case "ADMIN":
-                    return View();
-                default:
-                    return new RedirectResult(Url.Action("Login", "Account"));
-            }
-        }
 
         public ActionResult USR_Admin()
         {
