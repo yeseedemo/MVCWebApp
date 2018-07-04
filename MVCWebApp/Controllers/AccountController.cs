@@ -13,6 +13,34 @@ namespace MVCWebApp.Controllers
 {
     public class AccountController : Controller
     {
+        #region > 確保別的使用者或未登入者不會進來
+        public void swGroups()
+        {
+            
+        }
+        #endregion
+
+        #region > 把密碼用SHA256計算
+        static string ComputeSha256Hash(string rawData)
+        {
+            // Create a SHA256   
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                // ComputeHash - returns byte array  
+                byte[] bytes = sha256Hash.ComputeHash(System.Text.Encoding.UTF8.GetBytes(rawData));
+
+                // Convert byte array to a string   
+                var builder = new System.Text.StringBuilder();
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    builder.Append(bytes[i].ToString("x2"));
+                }
+
+                return builder.ToString();
+            }
+        }
+        #endregion
+
         // public static string temp; //給判斷用戶群組用的暫存
 
         // 正常註冊頁面(get模式)
@@ -20,12 +48,15 @@ namespace MVCWebApp.Controllers
         {
             if (Session["key"] != null) //如果有Session直接轉跳X1
             {
-                switch (Session["key"])
+                if (Session["key"] != null) //如果有Session直接轉跳X1
                 {
-                    case "USER":
-                        return new RedirectResult(Url.Action("DB_User", "User"));
-                    case "ADMIN":
-                        return new RedirectResult(Url.Action("DB_Admin", "Admin"));
+                    switch (Session["key"])
+                    {
+                        case "USER":
+                            return new RedirectResult(Url.Action("DB_User", "User"));
+                        case "ADMIN":
+                            return new RedirectResult(Url.Action("DB_Admin", "Admin"));
+                    }
                 }
             }
             return View();
@@ -120,9 +151,11 @@ namespace MVCWebApp.Controllers
                         return new RedirectResult(Url.Action("DB_User", "User"));
                     case "ADMIN":
                         return new RedirectResult(Url.Action("DB_Admin", "Admin"));
+                    default:
+                        ViewBag.Msg = "此帳號發生問題，請聯絡管理人員"; // 沒有群組對應
+                        return View();
+
                 }
-                ViewBag.Msg = "此帳號發生問題，請聯絡管理人員"; // 沒有群組對應
-                return View();
             }
             else
             {
@@ -152,7 +185,6 @@ namespace MVCWebApp.Controllers
 
                         if (reader.Read())
                         {
-                            // AccountController.temp = reader["str_permission"].ToString(); // 抓取群組
                             Session["key"] = reader["str_permission"].ToString(); // Session狀態加入用戶群組
                             Session["uid"] = uid; // Session狀態加入用戶id
                             cmd.Dispose();
@@ -180,7 +212,6 @@ namespace MVCWebApp.Controllers
         }
 
         // 確認帳號沒有重複
-        
         [HttpPost]
         public ActionResult CheckAccount(string uid)
         {
@@ -203,29 +234,11 @@ namespace MVCWebApp.Controllers
         }
 
 
-        // 把密碼用SHA256計算
-        static string ComputeSha256Hash(string rawData)
-        {
-            // Create a SHA256   
-            using (SHA256 sha256Hash = SHA256.Create())
-            {
-                // ComputeHash - returns byte array  
-                byte[] bytes = sha256Hash.ComputeHash(System.Text.Encoding.UTF8.GetBytes(rawData));
 
-                // Convert byte array to a string   
-                var builder = new System.Text.StringBuilder();
-                for (int i = 0; i < bytes.Length; i++)
-                {
-                    builder.Append(bytes[i].ToString("x2"));
-                }
-
-                return builder.ToString();
-            }
-        }
         // 個人資訊頁面(get模式)
         public ActionResult Profile()
         {
-            if (Session["key"] == null) //如果有Session直接轉跳X1
+            if (Session["key"] == null) //如果有Session跳回登入
             {
                 return new RedirectResult(Url.Action("Login", "Account"));
             }
