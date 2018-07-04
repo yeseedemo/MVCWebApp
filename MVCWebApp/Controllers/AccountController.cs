@@ -13,7 +13,7 @@ namespace MVCWebApp.Controllers
 {
     public class AccountController : Controller
     {
-        public static string temp; //給判斷用戶群組用的暫存
+        // public static string temp; //給判斷用戶群組用的暫存
 
         // 正常註冊頁面(get模式)
         public ActionResult Signin()
@@ -114,7 +114,7 @@ namespace MVCWebApp.Controllers
             if (CheckLoginData(userid, userpw))
             {
                 // 選擇群組
-                switch (AccountController.temp)
+                switch (Session["key"])
                 {
                     case "USER":
                         return new RedirectResult(Url.Action("DB_User", "User"));
@@ -152,8 +152,8 @@ namespace MVCWebApp.Controllers
 
                         if (reader.Read())
                         {
-                            AccountController.temp = reader["str_permission"].ToString(); // 抓取群組
-                            Session["key"] = temp; // Session狀態加入用戶群組
+                            // AccountController.temp = reader["str_permission"].ToString(); // 抓取群組
+                            Session["key"] = reader["str_permission"].ToString(); // Session狀態加入用戶群組
                             Session["uid"] = uid; // Session狀態加入用戶id
                             cmd.Dispose();
                             connection.Close();

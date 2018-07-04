@@ -195,6 +195,7 @@
     <Compile Include="Models\SYS_GROUP_PERMISSION.cs" />
     <Compile Include="Models\SYS_USER_GROUP_RELATION .cs" />
     <Compile Include="Models\SYS_USER_PROFILE.cs" />
+    <Compile Include="Models\USR .cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
