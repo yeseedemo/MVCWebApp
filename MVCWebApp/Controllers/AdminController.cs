@@ -134,54 +134,55 @@ namespace MVCWebApp.Controllers
             string adminid = (string)Session["uid"]; //管理員ID
             string adminpw = post.upw; //管理員pw
             string userid = (string)Session["select"]; //選擇的使用者
-
+            
+            //要修改的資料
             string email = post.email; //用戶email
             string per = post.per; ///用戶群組
 
+            // 先確認管理者密碼
             if (CheckPW(adminid, adminpw))
             {
-                //修改資訊
+                //執行修改
                 try
                 {
-                    using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
+                    if (ModelState.IsValid)
                     {
-                        connection.Open();
-                        string strSQL = @"UPDATE public.account SET str_permission= @per , str_email= @email WHERE str_userid= @account";
-                        using (var cmd = new NpgsqlCommand(strSQL, connection))
+                        using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
                         {
-                            cmd.Parameters.AddWithValue("@per", per);
-                            cmd.Parameters.AddWithValue("@email", email);
-                            cmd.Parameters.AddWithValue("@account", userid);
-                            
-                            cmd.ExecuteNonQuery(); //執行修改
-                            cmd.Dispose();
-                            connection.Close();
+                            connection.Open();
+                            string strSQL = @"UPDATE public.account SET str_permission= @per , str_email= @email WHERE str_userid= @account";
+                            using (var cmd = new NpgsqlCommand(strSQL, connection))
+                            {
+                                cmd.Parameters.AddWithValue("@per", per);
+                                cmd.Parameters.AddWithValue("@email", email);
+                                cmd.Parameters.AddWithValue("@account", userid);
 
+                                cmd.ExecuteNonQuery(); //執行修改
+                                cmd.Dispose();
+                                connection.Close();
+
+                            }
                         }
+                        //提示成功字樣
+                        TempData["result"] = "修改成功";
+                        //返回查詢頁
+                        return new RedirectResult(Url.Action("USR_Admin", "Admin"));
                     }
-                    //提示成功字樣
-                    TempData["result"] = "修改成功";
-                    //返回查詢頁
-                    return new RedirectResult(Url.Action("USR_Admin", "Admin"));
-
+                    return View();
                 }
                 catch (Exception ex)
                 {
                     string error = ex.ToString();
-                    ViewBag.msg = "發生錯誤" + error;
                     return View();
                 }
             }
             else
             {
                 //回報
-                ViewBag.Msg = "輸入資料有誤，請重新輸入";
+                ViewBag.Msg = "密碼輸入錯誤，請重新輸入";
                 return View();
             }
         }
-
-
-
 
         //刪除帳號
         public ActionResult USR_Delete(string id)
@@ -207,41 +208,44 @@ namespace MVCWebApp.Controllers
             string adminid = (string)Session["uid"]; //管理員ID
             string adminpw = post.upw; //管理員pw
             string userid = (string)Session["select"]; //選擇的使用者
+            //驗證管理員密碼
             if (CheckPW(adminid, adminpw))
             {
                 //刪除帳號
                 try
                 {
-                    using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
+                    if (ModelState.IsValid)
                     {
-                        connection.Open();
-                        string strSQL = @"DELETE FROM public.account WHERE str_userid = @account";
-                        using (var cmd = new NpgsqlCommand(strSQL, connection))
+                        using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
                         {
-                            cmd.Parameters.AddWithValue("@account", userid);
-                            cmd.ExecuteNonQuery(); //刪除
-                            cmd.Dispose();
-                            connection.Close();
+                            connection.Open();
+                            string strSQL = @"DELETE FROM public.account WHERE str_userid = @account";
+                            using (var cmd = new NpgsqlCommand(strSQL, connection))
+                            {
+                                cmd.Parameters.AddWithValue("@account", userid);
+                                cmd.ExecuteNonQuery(); //刪除
+                                cmd.Dispose();
+                                connection.Close();
 
+                            }
                         }
+                        //提示成功字樣
+                        TempData["result"] = "刪除成功";
+                        //返回查詢頁
+                        return new RedirectResult(Url.Action("USR_Admin", "Admin"));
                     }
-                    //提示成功字樣
-                    TempData["result"] = "刪除成功";
-                    //返回查詢頁
-                    return new RedirectResult(Url.Action("USR_Admin", "Admin"));
-
+                    return View();
                 }
                 catch (Exception ex)
                 {
                     string error = ex.ToString();
-                    ViewBag.msg = "發生錯誤" + error;
                     return View();
                 }
             }
             else
             {
                 //回報
-                ViewBag.Msg = "輸入資料有誤，請重新輸入";
+                ViewBag.Msg = "密碼輸入錯誤，請重新輸入";
                 return View();
             }
         }

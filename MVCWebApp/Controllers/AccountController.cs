@@ -169,30 +169,34 @@ namespace MVCWebApp.Controllers
         {
             try
             {
-                using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
+                if (ModelState.IsValid)
                 {
-                    connection.Open();
-                    // 密碼用SHA256轉換
-                    string upwsha256 = ComputeSha256Hash(upw);
-                    string strSQL = @"SELECT str_userid, str_passwd ,str_permission FROM public.account WHERE str_userid = @account AND str_passwd = @password;"; //找尋帳號與密碼都相同的資料
-
-                    using (var cmd = new NpgsqlCommand(strSQL, connection))
+                    using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
                     {
-                        // 預防SQL Injection
-                        cmd.Parameters.AddWithValue("@account", uid);
-                        cmd.Parameters.AddWithValue("@password", upwsha256);
-                        NpgsqlDataReader reader = cmd.ExecuteReader();
+                        connection.Open();
+                        // 密碼用SHA256轉換
+                        string upwsha256 = ComputeSha256Hash(upw);
+                        string strSQL = @"SELECT str_userid, str_passwd ,str_permission FROM public.account WHERE str_userid = @account AND str_passwd = @password;"; //找尋帳號與密碼都相同的資料
 
-                        if (reader.Read())
+                        using (var cmd = new NpgsqlCommand(strSQL, connection))
                         {
-                            Session["key"] = reader["str_permission"].ToString(); // Session狀態加入用戶群組
-                            Session["uid"] = uid; // Session狀態加入用戶id
-                            cmd.Dispose();
-                            connection.Close();
-                            return true;
-                        }
+                            // 預防SQL Injection
+                            cmd.Parameters.AddWithValue("@account", uid);
+                            cmd.Parameters.AddWithValue("@password", upwsha256);
+                            NpgsqlDataReader reader = cmd.ExecuteReader();
 
+                            if (reader.Read())
+                            {
+                                Session["key"] = reader["str_permission"].ToString(); // Session狀態加入用戶群組
+                                Session["uid"] = uid; // Session狀態加入用戶id
+                                cmd.Dispose();
+                                connection.Close();
+                                return true;
+                            }
+
+                        }
                     }
+                    return false;
                 }
                 return false;
             }
