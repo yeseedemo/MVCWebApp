@@ -1,8 +1,9 @@
 ﻿@using PagedList
 @using PagedList.Mvc
 
-
 <h4> 這裡是 @Session["uid"] 的Group管理頁</h4><br>
+
+<span style="color:red">@TempData["result"]</span> <!-- 結果檢視 -->
 
 @model IEnumerable<MVCWebApp.Models.USR>
 
@@ -23,68 +24,25 @@
     </tr>
     @foreach (var item in Model)
     {
-    <tr>
-        <td>
-            @Html.DisplayFor(modelItem => item.uid)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.email)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.per)
-        </td>
-        <td>
-            <!-- <li>@Html.ActionLink("修改", "Index", "Admin") | @Html.ActionLink("刪除", "Index", "Admin")</li> -->
-
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#foredit">
-                修改
-            </button>
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#fordelete">
-                刪除
-            </button>
-            <!-- 修改 -->
-            <div class="modal fade" id="foredit" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="exampleModalLongTitle">修改</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            ...
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
-                            <button type="button" class="btn btn-primary">確認修改</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- END-->
-            <!-- 刪除 -->
-            <div class="modal fade" id="fordelete" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="exampleModalLongTitle">刪除</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            ...
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
-                            <button type="button" class="btn btn-primary">確認刪除</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- END-->
-        </td>
-    </tr>
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.uid)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.email)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.per)
+            </td>
+            <td>
+                @Html.ActionLink("編輯", "USR_Edit", new { id = item.uid })
+                @Html.ActionLink("刪除", "USR_Delete", new { id = item.uid })
+            </td>
+        </tr>
     }
 </table>
+
+<!--
+    互動式選單
+    http://bootstrap.hexschool.com/docs/4.0/components/modal/
+-->

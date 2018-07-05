@@ -249,6 +249,7 @@
     <Content Include="Views\Admin\USR_Admin.cshtml" />
     <Content Include="Views\Account\Profile.cshtml" />
     <Content Include="Views\Admin\USR_Edit.cshtml" />
+    <Content Include="Views\Admin\USR_Delete.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Views\Default\" />

@@ -1,15 +1,13 @@
-﻿using Newtonsoft.Json;
-using PagedList;
-using ServiceStack;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using System.Web;
 using System.Web.Mvc;
-using MVCWebApp.Models;
-using System.Data;
 using Npgsql;
 using System.Configuration;
+using MVCWebApp.Models;
+using System.Data;
+using System.Security.Cryptography;
 
 namespace MVCWebApp.Controllers
 {
@@ -54,6 +52,27 @@ namespace MVCWebApp.Controllers
         }
         #endregion
 
+        #region > 把密碼用SHA256計算
+        static string ComputeSha256Hash(string rawData)
+        {
+            // Create a SHA256   
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                // ComputeHash - returns byte array  
+                byte[] bytes = sha256Hash.ComputeHash(System.Text.Encoding.UTF8.GetBytes(rawData));
+
+                // Convert byte array to a string   
+                var builder = new System.Text.StringBuilder();
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    builder.Append(bytes[i].ToString("x2"));
+                }
+
+                return builder.ToString();
+            }
+        }
+        #endregion
+
         public ActionResult DB_Admin()
         {
             switch (Session["key"])
@@ -88,18 +107,181 @@ namespace MVCWebApp.Controllers
             {
                 USRshow.Add(new USR() { uid = dr["uid"].ToString(), email = dr["email"].ToString(), per = dr["per"].ToString() });
             }
-
-            // USRshow.Add(new USR() { uid = "test", email = "123@123.com", per = "ADMIN" });
-
             return View(USRshow);
         }
-        public ActionResult DeleteAC()
+
+        //修改資訊
+        public ActionResult USR_Edit(string id)
         {
+            switch (Session["key"])
+            {
+                case "USER":
+                    return new RedirectResult(Url.Action("DB_User", "User"));
+                case "ADMIN":
+                    break;
+                default:
+                    return new RedirectResult(Url.Action("Login", "Account"));
+            }
+
+            string userid = id; //要刪除的資料
+            Session["select"] = userid; //先把選擇的ID記下
+
             return View();
         }
-        public ActionResult EditAC()
+        [HttpPost]
+        public ActionResult USR_Edit(USR post)
         {
+            string adminid = (string)Session["uid"]; //管理員ID
+            string adminpw = post.upw; //管理員pw
+            string userid = (string)Session["select"]; //選擇的使用者
+
+            string email = post.email; //用戶email
+            string per = post.per; ///用戶群組
+
+            if (CheckPW(adminid, adminpw))
+            {
+                //修改資訊
+                try
+                {
+                    using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
+                    {
+                        connection.Open();
+                        string strSQL = @"UPDATE public.account SET str_permission= @per , str_email= @email WHERE str_userid= @account";
+                        using (var cmd = new NpgsqlCommand(strSQL, connection))
+                        {
+                            cmd.Parameters.AddWithValue("@per", per);
+                            cmd.Parameters.AddWithValue("@email", email);
+                            cmd.Parameters.AddWithValue("@account", userid);
+                            
+                            cmd.ExecuteNonQuery(); //執行修改
+                            cmd.Dispose();
+                            connection.Close();
+
+                        }
+                    }
+                    //提示成功字樣
+                    TempData["result"] = "修改成功";
+                    //返回查詢頁
+                    return new RedirectResult(Url.Action("USR_Admin", "Admin"));
+
+                }
+                catch (Exception ex)
+                {
+                    string error = ex.ToString();
+                    ViewBag.msg = "發生錯誤" + error;
+                    return View();
+                }
+            }
+            else
+            {
+                //回報
+                ViewBag.Msg = "輸入資料有誤，請重新輸入";
+                return View();
+            }
+        }
+
+
+
+
+        //刪除帳號
+        public ActionResult USR_Delete(string id)
+        {
+            switch (Session["key"])
+            {
+                case "USER":
+                    return new RedirectResult(Url.Action("DB_User", "User"));
+                case "ADMIN":
+                    break;
+                default:
+                    return new RedirectResult(Url.Action("Login", "Account"));
+            }
+
+            string userid = id; //要刪除的資料
+            Session["select"] = userid; //先把選擇的ID記下
+
             return View();
+        }
+        [HttpPost]
+        public ActionResult USR_Delete(USR post)
+        {
+            string adminid = (string)Session["uid"]; //管理員ID
+            string adminpw = post.upw; //管理員pw
+            string userid = (string)Session["select"]; //選擇的使用者
+            if (CheckPW(adminid, adminpw))
+            {
+                //刪除帳號
+                try
+                {
+                    using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
+                    {
+                        connection.Open();
+                        string strSQL = @"DELETE FROM public.account WHERE str_userid = @account";
+                        using (var cmd = new NpgsqlCommand(strSQL, connection))
+                        {
+                            cmd.Parameters.AddWithValue("@account", userid);
+                            cmd.ExecuteNonQuery(); //刪除
+                            cmd.Dispose();
+                            connection.Close();
+
+                        }
+                    }
+                    //提示成功字樣
+                    TempData["result"] = "刪除成功";
+                    //返回查詢頁
+                    return new RedirectResult(Url.Action("USR_Admin", "Admin"));
+
+                }
+                catch (Exception ex)
+                {
+                    string error = ex.ToString();
+                    ViewBag.msg = "發生錯誤" + error;
+                    return View();
+                }
+            }
+            else
+            {
+                //回報
+                ViewBag.Msg = "輸入資料有誤，請重新輸入";
+                return View();
+            }
+        }
+
+        // 驗證admin密碼
+        public bool CheckPW(string uid, string upw)
+        {
+            try
+            {
+                using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
+                {
+                    connection.Open();
+                    // 密碼用SHA256轉換
+                    string upwsha256 = ComputeSha256Hash(upw);
+                    string strSQL = @"SELECT str_userid, str_passwd FROM public.account WHERE str_userid = @account AND str_passwd = @password;";
+
+                    using (var cmd = new NpgsqlCommand(strSQL, connection))
+                    {
+                        // 預防SQL Injection
+                        cmd.Parameters.AddWithValue("@account", uid);
+                        cmd.Parameters.AddWithValue("@password", upwsha256);
+                        NpgsqlDataReader reader = cmd.ExecuteReader();
+
+                        if (reader.Read())
+                        {
+                            cmd.Dispose();
+                            connection.Close();
+                            return true;
+                        }
+
+                    }
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                string error = ex.ToString();
+
+                return false;
+            }
         }
     }
 }

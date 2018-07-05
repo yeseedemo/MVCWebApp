@@ -1,0 +1,18 @@
+﻿@model MVCWebApp.Models.USR
+
+@Styles.Render("~/Content/css")
+@Scripts.Render("~/bundles/modernizr")
+
+
+<form style="margin-left:10px;" method="post" action="">
+    <div>
+        <br><br><br>
+        <h3>請確認刪除</h3>
+        <span style="color:red">@ViewBag.msg</span>  <!-- 錯誤提示用的 -->
+        <!--輸入管理員密碼-->
+        @Html.LabelFor(model => model.upw, htmlAttributes: new { @class = "control-label col-md-2" }) <!-- 標題 -->
+        @Html.EditorFor(model => model.upw, new { htmlAttributes = new { @class = "form-control" } }) <!-- 資料輸入欄位 -->
+        @Html.ValidationMessageFor(model => model.upw, "", new { @class = "text-danger" }) <!-- 警告訊息 -->
+    </div>
+    <button type="submit" class="btn btn-primary">確定</button>
+</form>
