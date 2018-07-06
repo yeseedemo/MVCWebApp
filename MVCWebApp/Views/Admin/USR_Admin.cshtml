@@ -40,13 +40,12 @@
             </td>
         </tr>
     }
-
 </table>
+
 @Html.PagedListPager((IPagedList)ViewBag.OnePageOfUSR, page => Url.Action("USR_Admin", new { page }))
 
 <!--
     互動式選單
     http://bootstrap.hexschool.com/docs/4.0/components/modal/
     分頁
-    https://github.com/dncuug/X.PagedList
 -->

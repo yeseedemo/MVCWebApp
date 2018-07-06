@@ -14,7 +14,6 @@ namespace MVCWebApp.Controllers
 {
     public class AdminController : Controller
     {
-
         #region > 把使用者資料群組撈出來放DataTable
         public void getUSR(out DataTable dt)
         {
@@ -65,7 +64,7 @@ namespace MVCWebApp.Controllers
             }
         }
         #endregion
-        private int pageSize = 5; //配合PagedList
+
         public ActionResult DB_Admin()
         {
             switch (Session["key"])
@@ -82,7 +81,6 @@ namespace MVCWebApp.Controllers
         }
 
         List<USR> USRshow = new List<USR>();
-
         public ActionResult USR_Admin(int? page)
         {
             switch (Session["key"])
@@ -102,9 +100,9 @@ namespace MVCWebApp.Controllers
                 USRshow.Add(new USR() { uid = dr["uid"].ToString(), email = dr["email"].ToString(), per = dr["per"].ToString() });
             }
 
-            var products = USRshow;
-            var pageNumber = page ?? 1;
-            var onePageOfUSR = products.ToPagedList(pageNumber, 5);
+            var products = USRshow; //資料集
+            var pageNumber = page ?? 1; //預設分頁
+            var onePageOfUSR = products.ToPagedList(pageNumber, 5); //每頁長度
 
             ViewBag.OnePageOfUSR = onePageOfUSR;
             return View();
