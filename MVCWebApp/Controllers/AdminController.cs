@@ -8,6 +8,7 @@ using System.Configuration;
 using MVCWebApp.Models;
 using System.Data;
 using System.Security.Cryptography;
+using X.PagedList;
 
 namespace MVCWebApp.Controllers
 {
@@ -64,7 +65,7 @@ namespace MVCWebApp.Controllers
             }
         }
         #endregion
-
+        private int pageSize = 5; //配合PagedList
         public ActionResult DB_Admin()
         {
             switch (Session["key"])
@@ -76,13 +77,13 @@ namespace MVCWebApp.Controllers
                 default:
                     return new RedirectResult(Url.Action("Login", "Account"));
             }
-            return View();
 
+            return View();
         }
 
         List<USR> USRshow = new List<USR>();
 
-        public ActionResult USR_Admin()
+        public ActionResult USR_Admin(int? page)
         {
             switch (Session["key"])
             {
@@ -100,7 +101,13 @@ namespace MVCWebApp.Controllers
             {
                 USRshow.Add(new USR() { uid = dr["uid"].ToString(), email = dr["email"].ToString(), per = dr["per"].ToString() });
             }
-            return View(USRshow);
+
+            var products = USRshow;
+            var pageNumber = page ?? 1;
+            var onePageOfUSR = products.ToPagedList(pageNumber, 5);
+
+            ViewBag.OnePageOfUSR = onePageOfUSR;
+            return View();
         }
 
         //修改資訊

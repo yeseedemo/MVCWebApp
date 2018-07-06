@@ -1,38 +1,38 @@
-﻿@using PagedList
-@using PagedList.Mvc
-
-<h4> 這裡是 @Session["uid"] 的Group管理頁</h4><br>
+﻿<h4> 這裡是 @Session["uid"] 的Group管理頁</h4><br>
 
 <span style="color:red">@TempData["result"]</span> <!-- 結果檢視 -->
 
 @model IEnumerable<MVCWebApp.Models.USR>
+@using X.PagedList.Mvc;
+@using X.PagedList;
+<link href="/Content/PagedList.css" rel="stylesheet" type="text/css" />
 
 <table class="table">
     <tr>
         <th>
-            @Html.DisplayNameFor(model => model.uid)
+            @Html.DisplayNameFor(model => model.FirstOrDefault().uid)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.email)
+            @Html.DisplayNameFor(model => model.FirstOrDefault().email)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.per)
+            @Html.DisplayNameFor(model => model.FirstOrDefault().per)
         </th>
         <th>
             操作
         </th>
     </tr>
-    @foreach (var item in Model)
+    @foreach (var item in ViewBag.OnePageOfUSR)
     {
         <tr>
             <td>
-                @Html.DisplayFor(modelItem => item.uid)
+                @item.uid
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.email)
+                @item.email
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.per)
+                @item.per
             </td>
             <td>
                 @Html.ActionLink("編輯", "USR_Edit", new { id = item.uid })
@@ -40,9 +40,13 @@
             </td>
         </tr>
     }
+
 </table>
-  
-    <!--
-        互動式選單
-        http://bootstrap.hexschool.com/docs/4.0/components/modal/
-    -->
+@Html.PagedListPager((IPagedList)ViewBag.OnePageOfUSR, page => Url.Action("USR_Admin", new { page }))
+
+<!--
+    互動式選單
+    http://bootstrap.hexschool.com/docs/4.0/components/modal/
+    分頁
+    https://github.com/dncuug/X.PagedList
+-->
