@@ -13,13 +13,6 @@ namespace MVCWebApp.Controllers
 {
     public class AccountController : Controller
     {
-        #region > 確保別的使用者或未登入者不會進來
-        public void swGroups()
-        {
-            
-        }
-        #endregion
-
         #region > 把密碼用SHA256計算
         static string ComputeSha256Hash(string rawData)
         {
@@ -40,8 +33,6 @@ namespace MVCWebApp.Controllers
             }
         }
         #endregion
-
-        // public static string temp; //給判斷用戶群組用的暫存
 
         // 正常註冊頁面(get模式)
         public ActionResult Signin()
@@ -84,7 +75,8 @@ namespace MVCWebApp.Controllers
                 return View();
             }
         }
-        //確認兩次密碼一致並註冊
+
+        //註冊功能
         public bool goSignin(string uid, string upw1, string email)
         {
             try
@@ -118,6 +110,7 @@ namespace MVCWebApp.Controllers
                 return false;
             }
         }
+
         // 正常登入頁面(get模式)
         public ActionResult Login()
         {
@@ -169,41 +162,33 @@ namespace MVCWebApp.Controllers
         {
             try
             {
-                if (ModelState.IsValid)
+                using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
                 {
-                    using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
+                    connection.Open();
+                    // 密碼用SHA256轉換
+                    string upwsha256 = ComputeSha256Hash(upw);
+                    string strSQL = @"SELECT str_userid, str_passwd ,str_permission FROM public.account WHERE str_userid = @account AND str_passwd = @password;"; //找尋帳號與密碼都相同的資料
+                    using (var cmd = new NpgsqlCommand(strSQL, connection))
                     {
-                        connection.Open();
-                        // 密碼用SHA256轉換
-                        string upwsha256 = ComputeSha256Hash(upw);
-                        string strSQL = @"SELECT str_userid, str_passwd ,str_permission FROM public.account WHERE str_userid = @account AND str_passwd = @password;"; //找尋帳號與密碼都相同的資料
-
-                        using (var cmd = new NpgsqlCommand(strSQL, connection))
+                        // 預防SQL Injection
+                        cmd.Parameters.AddWithValue("@account", uid);
+                        cmd.Parameters.AddWithValue("@password", upwsha256);
+                        NpgsqlDataReader reader = cmd.ExecuteReader();
+                        if (reader.Read())
                         {
-                            // 預防SQL Injection
-                            cmd.Parameters.AddWithValue("@account", uid);
-                            cmd.Parameters.AddWithValue("@password", upwsha256);
-                            NpgsqlDataReader reader = cmd.ExecuteReader();
-
-                            if (reader.Read())
-                            {
-                                Session["key"] = reader["str_permission"].ToString(); // Session狀態加入用戶群組
-                                Session["uid"] = uid; // Session狀態加入用戶id
-                                cmd.Dispose();
-                                connection.Close();
-                                return true;
-                            }
-
+                            Session["key"] = reader["str_permission"].ToString(); // Session狀態加入用戶群組
+                            Session["uid"] = uid; // Session狀態加入用戶id
+                            cmd.Dispose();
+                            connection.Close();
+                            return true;
                         }
                     }
-                    return false;
                 }
                 return false;
             }
             catch (Exception ex)
             {
                 string error = ex.ToString();
-
                 return false;
             }
         }
@@ -236,8 +221,6 @@ namespace MVCWebApp.Controllers
             }
             return Json(true, JsonRequestBehavior.AllowGet);
         }
-
-
 
         // 個人資訊頁面(get模式)
         public ActionResult Profile()

@@ -13,18 +13,10 @@ namespace MVCWebApp.Controllers
 {
     public class AdminController : Controller
     {
-        #region > 確保別的使用者或未登入者不會進來
-        public void swGroups()
-        {
-            
-        }
-        #endregion
 
-        #region > 把使用者資料群組撈出來
+        #region > 把使用者資料群組撈出來放DataTable
         public void getUSR(out DataTable dt)
         {
-            
-
             dt = new DataTable();
             dt.Columns.Add("uid", typeof(String));
             dt.Columns.Add("email", typeof(String));
@@ -103,6 +95,7 @@ namespace MVCWebApp.Controllers
             }
             DataTable dt;
             getUSR(out dt);
+            //把使用者資訊一行一行印出來
             foreach (DataRow dr in dt.Rows)
             {
                 USRshow.Add(new USR() { uid = dr["uid"].ToString(), email = dr["email"].ToString(), per = dr["per"].ToString() });
@@ -134,7 +127,7 @@ namespace MVCWebApp.Controllers
             string adminid = (string)Session["uid"]; //管理員ID
             string adminpw = post.upw; //管理員pw
             string userid = (string)Session["select"]; //選擇的使用者
-            
+
             //要修改的資料
             string email = post.email; //用戶email
             string per = post.per; ///用戶群組
@@ -214,27 +207,22 @@ namespace MVCWebApp.Controllers
                 //刪除帳號
                 try
                 {
-                    if (ModelState.IsValid)
+                    using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
                     {
-                        using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
+                        connection.Open();
+                        string strSQL = @"DELETE FROM public.account WHERE str_userid = @account";
+                        using (var cmd = new NpgsqlCommand(strSQL, connection))
                         {
-                            connection.Open();
-                            string strSQL = @"DELETE FROM public.account WHERE str_userid = @account";
-                            using (var cmd = new NpgsqlCommand(strSQL, connection))
-                            {
-                                cmd.Parameters.AddWithValue("@account", userid);
-                                cmd.ExecuteNonQuery(); //刪除
-                                cmd.Dispose();
-                                connection.Close();
-
-                            }
+                            cmd.Parameters.AddWithValue("@account", userid);
+                            cmd.ExecuteNonQuery(); //刪除
+                            cmd.Dispose();
+                            connection.Close();
                         }
-                        //提示成功字樣
-                        TempData["result"] = "刪除成功";
-                        //返回查詢頁
-                        return new RedirectResult(Url.Action("USR_Admin", "Admin"));
                     }
-                    return View();
+                    //提示成功字樣
+                    TempData["result"] = "刪除成功";
+                    //返回查詢頁
+                    return new RedirectResult(Url.Action("USR_Admin", "Admin"));
                 }
                 catch (Exception ex)
                 {
