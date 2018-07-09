@@ -196,6 +196,7 @@
     </Compile>
     <Compile Include="Models\ACCOUNT.cs" />
     <Compile Include="Models\APILOG.cs" />
+    <Compile Include="Models\GROUP.cs" />
     <Compile Include="Models\ProfileEdit.cs" />
     <Compile Include="Models\SYS_FUNCTION.cs" />
     <Compile Include="Models\SYS_GROUP_PERMISSION.cs" />
@@ -256,8 +257,10 @@
     <Content Include="Views\Account\Profile.cshtml" />
     <Content Include="Views\Admin\USR_Edit.cshtml" />
     <Content Include="Views\Admin\USR_Delete.cshtml" />
+    <Content Include="Views\Admin\Group_Edit.cshtml" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="helper\" />
     <Folder Include="Views\Default\" />
   </ItemGroup>
   <ItemGroup>

@@ -81,6 +81,8 @@ namespace MVCWebApp.Controllers
         }
 
         List<USR> USRshow = new List<USR>();
+
+        //分頁
         public ActionResult USR_Admin(int? page)
         {
             switch (Session["key"])
@@ -280,6 +282,33 @@ namespace MVCWebApp.Controllers
                 return false;
             }
         }
+
+        public ActionResult Group_Edit()
+        {
+            switch (Session["key"])
+            {
+                case "USER":
+                    return new RedirectResult(Url.Action("DB_User", "User"));
+                case "ADMIN":
+                    break;
+                default:
+                    return new RedirectResult(Url.Action("Login", "Account"));
+            }
+            return View();
+        }
+
+        [HttpPost]
+        public ActionResult Group_Edit(GROUP post)
+        {
+            //要做出12筆資料
+            foreach(var n in GROUP)
+            {
+
+            }
+            return View();
+        }
+
+
     }
 }
 

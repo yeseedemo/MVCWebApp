@@ -34,6 +34,30 @@ namespace MVCWebApp.Controllers
         }
         #endregion
 
+        #region > 帳號登入登出紀錄
+        static void LogState(bool state, string type, string uid)
+        {
+            using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
+            {
+                connection.Open();
+                string strSQL = @"INSERT INTO public.logstate(boo_state, str_type, str_uid, str_time) VALUES(@state, @type, @uid, @time);"; //找尋帳號與密碼都相同的資料
+                using (var cmd = new NpgsqlCommand(strSQL, connection))
+                {
+                    // 預防SQL Injection
+                    cmd.Parameters.AddWithValue("@state", state);
+                    cmd.Parameters.AddWithValue("@type", type);
+                    cmd.Parameters.AddWithValue("@uid", uid);
+                    cmd.Parameters.AddWithValue("@time", System.DateTime.Now.ToString("F"));
+
+                    cmd.ExecuteNonQuery();
+                    cmd.Dispose();
+                    connection.Close();
+                }
+            }
+        }
+        #endregion 
+
+
         // 正常註冊頁面(get模式)
         public ActionResult Signin()
         {
@@ -141,11 +165,16 @@ namespace MVCWebApp.Controllers
                 switch (Session["key"])
                 {
                     case "USER":
+                        // 紀錄登入訊息
+                        LogState(true, "login", userid); //紀錄成功
                         return new RedirectResult(Url.Action("DB_User", "User"));
                     case "ADMIN":
+                        // 紀錄登入訊息
+                        LogState(true, "login", userid); //紀錄成功
                         return new RedirectResult(Url.Action("DB_Admin", "Admin"));
                     default:
                         ViewBag.Msg = "此帳號發生問題，請聯絡管理人員"; // 沒有群組對應
+                        LogState(false, "login", userid); //紀錄失敗
                         return View();
 
                 }
@@ -153,6 +182,8 @@ namespace MVCWebApp.Controllers
             else
             {
                 ViewBag.Msg = "帳號或密碼錯誤，請重新輸入"; // 帳號或密碼沒有對應
+                // 紀錄登入訊息
+                LogState(false, "login", userid); //紀錄失敗
                 return View();
             }
         }
@@ -196,6 +227,7 @@ namespace MVCWebApp.Controllers
         // 登出
         public ActionResult Logout()
         {
+            LogState(true, "logout", (string)Session["uid"]); //成功登出紀錄
             Session.Clear();
             return View();
         }

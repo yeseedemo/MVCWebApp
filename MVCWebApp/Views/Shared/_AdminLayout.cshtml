@@ -21,7 +21,8 @@
             <div class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
                     <li>@Html.ActionLink("資料庫管理", "DB_Admin", "Admin")</li>
-                    <li>@Html.ActionLink("群組管理", "USR_Admin", "Admin")</li>
+                    <li>@Html.ActionLink("群組資料", "USR_Admin", "Admin")</li>
+                    <li>@Html.ActionLink("群組權限", "Group_Edit", "Admin")</li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     <li>@Html.ActionLink((string)Session["uid"], "Profile", "Account")</li>
