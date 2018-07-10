@@ -9,6 +9,8 @@ using MVCWebApp.Models;
 using System.Data;
 using System.Security.Cryptography;
 using X.PagedList;
+using ServiceStack.Templates;
+using System.Collections.Specialized;
 
 namespace MVCWebApp.Controllers
 {
@@ -300,15 +302,90 @@ namespace MVCWebApp.Controllers
         [HttpPost]
         public ActionResult Group_Edit(GROUP post)
         {
-            //要做出12筆資料
-            foreach(var n in GROUP)
+            using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
             {
+                connection.Open();
+                string strSQL = @"DELETE FROM public.sy_group_permission WHERE group_function_id > 0;"; //刪除之前紀錄
 
+                using (var cmd = new NpgsqlCommand(strSQL, connection))
+                {
+                    cmd.ExecuteNonQuery();
+                    cmd.Dispose();
+                    connection.Close();
+                }
+                for (int n = 1; n <= 12; n++)
+                {
+                    connection.Open();
+                    strSQL = @"INSERT INTO public.sy_group_permission(group_function_id, group_id, function_id, can_create, can_search, can_update, can_delete) VALUES(@group_function_id, @group_id, @function_id,"; //刪除之前紀錄
+
+                    String function_id = String.Format("{0:000000}", Convert.ToInt16(n));
+                    string strSQL2 = " 0, 0, 0, 0);";
+                    // 權限
+                    switch (n)
+                    {
+                        case 1:
+                        case 5:
+                        case 9:
+                            if (post.A || post.E || post.I)
+                            {
+                                strSQL2 = " 1, null, null, null);";
+                            }
+                            break;
+                        case 2:
+                        case 6:
+                        case 10:
+                            if (post.B || post.F || post.J)
+                            {
+                                strSQL2 = " null, 1, null, null);";
+                            }
+                            break;
+                        case 3:
+                        case 7:
+                        case 11:
+                            if (post.C || post.G || post.K)
+                            {
+                                strSQL2 = " null, null, 1, null);";
+                            }
+                            break;
+                        case 4:
+                        case 8:
+                        case 12:
+                            if (post.D || post.H || post.L)
+                            {
+                                strSQL2 = " null, null, null, 1);";
+                            }
+                            break;
+                    }
+                    strSQL = strSQL + strSQL2;
+                    using (var cmd = new NpgsqlCommand(strSQL, connection))
+                    {
+                        {
+                            // 前兩個欄位
+                            if (n <= 8)
+                            {
+                                cmd.Parameters.AddWithValue("@group_function_id", 1);
+                                cmd.Parameters.AddWithValue("@group_id", "admin");
+                            }
+                            else
+                            {
+                                cmd.Parameters.AddWithValue("@group_function_id", 2);
+                                cmd.Parameters.AddWithValue("@group_id", "user");
+                            }
+                            // 第三個欄位
+                            cmd.Parameters.AddWithValue("@function_id", function_id);
+                            cmd.ExecuteNonQuery();
+                            cmd.Dispose();
+                            connection.Close();
+                        }
+                    }
+                    //connection.Close();
+                }
+                ViewBag.Msg = "修改完成";
+                return View();
             }
-            return View();
+
+
         }
-
-
     }
 }
 
