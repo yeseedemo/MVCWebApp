@@ -258,6 +258,7 @@
     <Content Include="Views\Admin\USR_Edit.cshtml" />
     <Content Include="Views\Admin\USR_Delete.cshtml" />
     <Content Include="Views\Admin\Group_Edit.cshtml" />
+    <Content Include="Views\Admin\GroupRelation.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="helper\" />

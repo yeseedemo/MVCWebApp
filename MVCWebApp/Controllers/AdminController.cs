@@ -46,6 +46,42 @@ namespace MVCWebApp.Controllers
         }
         #endregion
 
+        #region > 把使用者資料群組撈出來放DataTable 2
+        public void GetGroup(out DataTable dt2)
+        {
+            dt2 = new DataTable();
+            dt2.Columns.Add("user_id", typeof(String));
+            dt2.Columns.Add("group_id", typeof(String));
+            dt2.Columns.Add("create_date", typeof(String));
+            dt2.Columns.Add("create_id", typeof(String));
+            dt2.Columns.Add("upd_date", typeof(String));
+            dt2.Columns.Add("upd_id", typeof(String));
+            using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
+            {
+                connection.Open();
+                string strSQL = @"SELECT user_id, group_id, create_date, create_id, upd_date, upd_id FROM public.sy_user_group_relation";
+                using (NpgsqlCommand cmd2 = new NpgsqlCommand(strSQL, connection))
+                {
+                    NpgsqlDataReader reader = cmd2.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        DataRow row = dt2.NewRow();
+                        row["user_id"] = reader["user_id"].ToString();
+                        row["group_id"] = reader["group_id"].ToString();
+                        row["create_date"] = reader["create_date"].ToString();
+                        row["create_id"] = reader["create_id"].ToString();
+                        row["upd_date"] = reader["upd_date"].ToString();
+                        row["upd_id"] = reader["upd_id"].ToString();
+                        dt2.Rows.Add(row);
+                    }
+
+                    cmd2.Dispose();
+                    connection.Close();
+                }
+            }
+        }
+        #endregion
+
         #region > 把密碼用SHA256計算
         static string ComputeSha256Hash(string rawData)
         {
@@ -67,6 +103,7 @@ namespace MVCWebApp.Controllers
         }
         #endregion
 
+        //用戶資料編輯(含分頁)
         public ActionResult DB_Admin()
         {
             switch (Session["key"])
@@ -81,10 +118,7 @@ namespace MVCWebApp.Controllers
 
             return View();
         }
-
         List<USR> USRshow = new List<USR>();
-
-        //分頁
         public ActionResult USR_Admin(int? page)
         {
             switch (Session["key"])
@@ -112,7 +146,7 @@ namespace MVCWebApp.Controllers
             return View();
         }
 
-        //修改資訊
+        // 修改資訊
         public ActionResult USR_Edit(string id)
         {
             switch (Session["key"])
@@ -186,7 +220,7 @@ namespace MVCWebApp.Controllers
             }
         }
 
-        //刪除帳號
+        // 刪除帳號
         public ActionResult USR_Delete(string id)
         {
             switch (Session["key"])
@@ -285,6 +319,7 @@ namespace MVCWebApp.Controllers
             }
         }
 
+        // 權限編輯
         public ActionResult Group_Edit()
         {
             switch (Session["key"])
@@ -298,7 +333,6 @@ namespace MVCWebApp.Controllers
             }
             return View();
         }
-
         [HttpPost]
         public ActionResult Group_Edit(GROUP post)
         {
@@ -378,13 +412,96 @@ namespace MVCWebApp.Controllers
                             connection.Close();
                         }
                     }
-                    //connection.Close();
                 }
                 ViewBag.Msg = "修改完成";
                 return View();
             }
+        }
 
+        // 用戶群組管理
+        List<SYS_USER_GROUP_RELATION> ShowGroup = new List<SYS_USER_GROUP_RELATION>();
+        public ActionResult GroupRelation(int? page)
+        {
+            switch (Session["key"])
+            {
+                case "USER":
+                    return new RedirectResult(Url.Action("DB_User", "User"));
+                case "ADMIN":
+                    break;
+                default:
+                    return new RedirectResult(Url.Action("Login", "Account"));
+            }
 
+            DataTable dt2;
+            GetGroup(out dt2);
+            //把使用者資訊一行一行印出來
+            foreach (DataRow dr2 in dt2.Rows)
+            {
+                ShowGroup.Add(new SYS_USER_GROUP_RELATION()
+                {
+                    USERID = dr2["user_id"].ToString(),
+                    GROUP_ID = dr2["group_id"].ToString(),
+                    CREATE_DATE = dr2["create_date"].ToString(),
+                    CREATE_ID = dr2["create_id"].ToString(),
+                    UPD_DATE = dr2["upd_date"].ToString(),
+                    UPD_ID = dr2["UPD_ID"].ToString()
+                });
+            }
+            var products = ShowGroup; //資料集
+            var pageNumber = page ?? 1; //預設分頁
+            var onePageOfGROUP = products.ToPagedList(pageNumber, 4); //每頁長度     
+            ViewBag.OnePageOfGROUP = onePageOfGROUP;
+            //變更群組用的下拉選單
+            List<SelectListItem> Groups = new List<SelectListItem>();
+            Groups.Add(new SelectListItem { Text = "不修改", Value = "0" });
+            Groups.Add(new SelectListItem { Text = "Admin", Value = "1" });
+            Groups.Add(new SelectListItem { Text = "User", Value = "2" });
+            ViewBag.GroupType = Groups;
+
+            return View();
+        }
+        [HttpPost]
+        public ActionResult GroupRelation(FormCollection post)
+        {
+            var uid = post["uid"].Split(',');
+            var group = post["GroupType"].Split(',');
+            int count = 0;
+            foreach (string n in group)
+            {
+                if (n != "0")
+                {
+                    ChangeGroup(uid[count], n);
+                }
+                count++;
+            }
+            TempData["msg"] = "修改完成";
+            return Redirect(Request.UrlReferrer.ToString()); ;
+        }
+        //修改群組
+        public void ChangeGroup(string uid, string group)
+        {
+            using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
+            {
+                connection.Open();
+                string strSQL = @"UPDATE public.sy_user_group_relation SET group_id = @group, upd_date = now(), upd_id = @upid WHERE user_id = @uid;";
+                using (var cmd = new NpgsqlCommand(strSQL, connection))
+                {
+                    cmd.Parameters.AddWithValue("@uid", uid); // 被修改人
+                    cmd.Parameters.AddWithValue("@upid", Session["uid"]); //修改者
+                    //被修改者群組
+                    if (group == "1")
+                    {
+                        cmd.Parameters.AddWithValue("@group", "Admin");
+                    }
+                    else
+                    {
+                        cmd.Parameters.AddWithValue("@group", "User");
+                    }
+                    cmd.ExecuteNonQuery(); //執行修改
+                    cmd.Dispose();
+                    connection.Close();
+                }
+            }
         }
     }
 }

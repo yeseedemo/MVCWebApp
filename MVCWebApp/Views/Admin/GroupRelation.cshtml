@@ -1,0 +1,56 @@
+﻿<h4> 這裡是 @Session["uid"] 的Group Relation管理頁</h4><br>
+<span style="color:red">@TempData["msg"]</span> <!-- 結果檢視 -->
+
+@model IEnumerable<MVCWebApp.Models.SYS_USER_GROUP_RELATION>
+@using X.PagedList.Mvc;
+@using X.PagedList;
+<link href="/Content/PagedList.css" rel="stylesheet" type="text/css" />
+
+<form style="margin-left:10px;" method="post" action="">
+    <table class="table">
+        <tr>
+            <th>
+                使用者名稱
+            </th>
+            <th>
+                群組名稱
+            </th>
+            <th>
+                新增人員
+            </th>
+            <th>
+                修改人員
+            </th>
+            <th>
+                變更群組
+            </th>
+        </tr>
+        @foreach (var item in ViewBag.OnePageOfGROUP)
+        {
+        <tr>
+            <td>
+                @item.USERID
+            </td>
+            <td>
+                @item.GROUP_ID
+            </td>
+            <td>
+                @item.CREATE_ID <br>
+                @item.CREATE_DATE
+            </td>
+            <td>
+                @item.UPD_ID <br>
+                @item.UPD_DATE
+            </td>
+            <td>
+                @Html.DropDownList("GroupType")
+                <input type="hidden" name="uid" value=@item.USERID>
+            </td>
+        </tr>
+        }
+    </table>
+    @Html.PagedListPager((IPagedList)ViewBag.OnePageOfGROUP, page => Url.Action("GroupRelation", new { page }))
+    <button type="submit" class="btn btn-primary">確認修改</button>
+</form>
+
+
