@@ -82,6 +82,41 @@ namespace MVCWebApp.Controllers
         }
         #endregion
 
+        #region > 把登入紀錄撈出來放DataTable 3
+        
+        public void GetLogState(out DataTable dt3)
+        {
+            dt3 = new DataTable();
+            dt3.Columns.Add("boo_state", typeof(bool));
+            dt3.Columns.Add("str_uid", typeof(String));
+            dt3.Columns.Add("tsp_time", typeof(DateTime));
+            dt3.Columns.Add("str_type", typeof(String));
+
+            using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
+            {
+                connection.Open();
+                string strSQL = @"SELECT boo_state, str_uid, tsp_time, str_type FROM public.logstate ORDER BY user_id ASC";
+                using (NpgsqlCommand cmd3 = new NpgsqlCommand(strSQL, connection))
+                {
+                    NpgsqlDataReader reader = cmd3.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        DataRow row = dt3.NewRow();
+                        row["boo_state"] = reader["boo_state"].ToString();
+                        row["str_uid"] = reader["str_uid"].ToString();
+                        row["tsp_time"] = reader["tsp_time"];
+                        row["str_type"] = reader["str_type"].ToString();
+                        dt3.Rows.Add(row);
+                    }
+
+                    cmd3.Dispose();
+                    connection.Close();
+                }
+            }
+        }
+        
+        #endregion
+
         #region > 把密碼用SHA256計算
         static string ComputeSha256Hash(string rawData)
         {
@@ -503,6 +538,46 @@ namespace MVCWebApp.Controllers
                 }
             }
         }
+
+        List<Logstate> ShowState = new List<Logstate>();
+        public ActionResult USR_LogState(int? page)
+        {
+            switch (Session["key"])
+            {
+                case "USER":
+                    return new RedirectResult(Url.Action("DB_User", "User"));
+                case "ADMIN":
+                    break;
+                default:
+                    return new RedirectResult(Url.Action("Login", "Account"));
+            }
+
+            DataTable dt3;
+            GetGroup(out dt3);
+            //把使用者資訊一行一行印出來
+            foreach (DataRow dr3 in dt3.Rows)
+            {
+                ShowGroup.Add(new Logstate()
+                {
+                    boo_state = Convert.ToBoolean(dr3["boo_state"]),
+                    str_uid = dr3["str_uid"].ToString(),
+                    str_type = dr3["str_type"].ToString(),
+                    tsp_time = Convert.ToDateTime(dr3["tsp_time"])
+                });
+            }
+            var products = ShowGroup; //資料集
+            var pageNumber = page ?? 1; //預設分頁
+            var onePageOfGROUP = products.ToPagedList(pageNumber, 4); //每頁長度     
+            ViewBag.OnePageOfGROUP = onePageOfGROUP;
+            //變更群組用的下拉選單
+            List<SelectListItem> Groups = new List<SelectListItem>();
+            Groups.Add(new SelectListItem { Text = "不修改", Value = "0" });
+            Groups.Add(new SelectListItem { Text = "Admin", Value = "1" });
+            Groups.Add(new SelectListItem { Text = "User", Value = "2" });
+            ViewBag.GroupType = Groups;
+            return View();
+        }
+
     }
 }
 

@@ -1,0 +1,49 @@
+﻿<h4> 這裡是 @Session["uid"] 的登出入紀錄檢視頁</h4><br>
+
+@model IEnumerable<MVCWebApp.Models.Logstate>
+@using X.PagedList.Mvc;
+@using X.PagedList;
+<link href="/Content/PagedList.css" rel="stylesheet" type="text/css" />
+
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.FirstOrDefault().uid)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.FirstOrDefault().email)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.FirstOrDefault().per)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.FirstOrDefault().per)
+        </th>
+    </tr>
+    @foreach (var item in ViewBag.OnePageOfUSR)
+    {
+        < tr >
+        < td >
+        @item.uid
+        </ td >
+        < td >
+        @item.email
+        </ td >
+        < td >
+        @item.per
+        </ td >
+        < td >
+        @Html.ActionLink("編輯", "USR_Edit", new { id = item.uid })
+        @Html.ActionLink("刪除", "USR_Delete", new { id = item.uid })
+        </ td >
+        </ tr >
+    }
+</table>
+
+@Html.PagedListPager((IPagedList)ViewBag.OnePageOfUSR, page => Url.Action("USR_Admin", new { page }))
+
+<!--
+    互動式選單
+    http://bootstrap.hexschool.com/docs/4.0/components/modal/
+    分頁
+-->

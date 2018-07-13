@@ -40,14 +40,13 @@ namespace MVCWebApp.Controllers
             using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
             {
                 connection.Open();
-                string strSQL = @"INSERT INTO public.logstate(boo_state, str_type, str_uid, str_time) VALUES(@state, @type, @uid, @time);"; //找尋帳號與密碼都相同的資料
+                string strSQL = @"INSERT INTO public.logstate(boo_state, str_type, str_uid, tsp_time) VALUES(@state, @type, @uid, now());"; //找尋帳號與密碼都相同的資料
                 using (var cmd = new NpgsqlCommand(strSQL, connection))
                 {
                     // 預防SQL Injection
                     cmd.Parameters.AddWithValue("@state", state);
                     cmd.Parameters.AddWithValue("@type", type);
                     cmd.Parameters.AddWithValue("@uid", uid);
-                    cmd.Parameters.AddWithValue("@time", System.DateTime.Now.ToString("F"));
 
                     cmd.ExecuteNonQuery();
                     cmd.Dispose();
