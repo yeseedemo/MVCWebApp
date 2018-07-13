@@ -26,7 +26,7 @@ namespace MVCWebApp.Controllers
             using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
             {
                 connection.Open();
-                string strSQL = @"SELECT str_userid, str_permission, str_email FROM public.account";
+                string strSQL = @"SELECT str_userid, str_permission, str_email FROM public.account ORDER BY str_userid ASC";
                 using (NpgsqlCommand cmd = new NpgsqlCommand(strSQL, connection))
                 {
                     NpgsqlDataReader reader = cmd.ExecuteReader();
@@ -52,14 +52,14 @@ namespace MVCWebApp.Controllers
             dt2 = new DataTable();
             dt2.Columns.Add("user_id", typeof(String));
             dt2.Columns.Add("group_id", typeof(String));
-            dt2.Columns.Add("create_date", typeof(String));
+            dt2.Columns.Add("create_date", typeof(DateTime));
             dt2.Columns.Add("create_id", typeof(String));
             dt2.Columns.Add("upd_date", typeof(String));
             dt2.Columns.Add("upd_id", typeof(String));
             using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
             {
                 connection.Open();
-                string strSQL = @"SELECT user_id, group_id, create_date, create_id, upd_date, upd_id FROM public.sy_user_group_relation";
+                string strSQL = @"SELECT user_id, group_id, create_date, create_id, upd_date, upd_id FROM public.sy_user_group_relation ORDER BY user_id ASC";
                 using (NpgsqlCommand cmd2 = new NpgsqlCommand(strSQL, connection))
                 {
                     NpgsqlDataReader reader = cmd2.ExecuteReader();
@@ -68,9 +68,9 @@ namespace MVCWebApp.Controllers
                         DataRow row = dt2.NewRow();
                         row["user_id"] = reader["user_id"].ToString();
                         row["group_id"] = reader["group_id"].ToString();
-                        row["create_date"] = reader["create_date"].ToString();
+                        row["create_date"] = reader["create_date"];
                         row["create_id"] = reader["create_id"].ToString();
-                        row["upd_date"] = reader["upd_date"].ToString();
+                        row["upd_date"] = reader["upd_date"];
                         row["upd_id"] = reader["upd_id"].ToString();
                         dt2.Rows.Add(row);
                     }
@@ -441,9 +441,9 @@ namespace MVCWebApp.Controllers
                 {
                     USERID = dr2["user_id"].ToString(),
                     GROUP_ID = dr2["group_id"].ToString(),
-                    CREATE_DATE = dr2["create_date"].ToString(),
+                    CREATE_DATE = Convert.ToDateTime(dr2["create_date"]),
                     CREATE_ID = dr2["create_id"].ToString(),
-                    UPD_DATE = dr2["upd_date"].ToString(),
+                    UPD_DATE = Convert.ToDateTime(dr2["upd_date"]),
                     UPD_ID = dr2["UPD_ID"].ToString()
                 });
             }

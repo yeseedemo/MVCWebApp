@@ -12,14 +12,21 @@ namespace MVCWebApp.Models
         public String USERID { get; set; }
         [Display(Name = "群組名稱")]
         public String GROUP_ID { get; set; }
+
         [Display(Name = "新增時間")]
-        // [DataType(DataType.Date)]
-        public String CREATE_DATE { get; set; } //讀取用String
+        [DataType(DataType.Date)]
+        [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}")]
+        public DateTime CREATE_DATE { get; set; } //還沒修好
+
+
         [Display(Name = "新增人員")]
         public String CREATE_ID { get; set; }
+
         [Display(Name = "修改時間")]
-        // [DataType(DataType.Date)]
-        public String UPD_DATE { get; set; } //讀取用String
+        [DataType(DataType.Date)]
+        [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}")]
+        public DateTime UPD_DATE { get; set; } //還沒修好
+
         [Display(Name = "修改人員")]
         public String UPD_ID { get; set; }
     }
