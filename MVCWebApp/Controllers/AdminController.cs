@@ -11,9 +11,11 @@ using System.Security.Cryptography;
 using X.PagedList;
 using ServiceStack.Templates;
 using System.Collections.Specialized;
+using MVCWebApp.AuthData;
 
 namespace MVCWebApp.Controllers
 {
+    [ActionAttribute]
     public class AdminController : Controller
     {
         #region > 把使用者資料群組撈出來放DataTable

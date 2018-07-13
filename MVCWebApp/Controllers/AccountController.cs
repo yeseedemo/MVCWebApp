@@ -8,6 +8,7 @@ using System.Configuration;
 using MVCWebApp.Models;
 using System.Data;
 using System.Security.Cryptography;
+using MVCWebApp.AuthData;
 
 namespace MVCWebApp.Controllers
 {
@@ -150,7 +151,6 @@ namespace MVCWebApp.Controllers
             }
             return View();
         }
-
         // 接收並驗證(post模式)
         [HttpPost]
         public ActionResult Login(ACCOUNT post)
@@ -255,12 +255,15 @@ namespace MVCWebApp.Controllers
         }
 
         // 個人資訊頁面(get模式)
+        [ActionAttribute]
         public ActionResult Profile()
         {
+            /*
             if (Session["key"] == null) //如果有Session跳回登入
             {
                 return new RedirectResult(Url.Action("Login", "Account"));
             }
+            */
             return View();
         }
         // 個人資訊頁面(post模式)
