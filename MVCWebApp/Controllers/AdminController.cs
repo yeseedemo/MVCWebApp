@@ -11,15 +11,15 @@ using System.Security.Cryptography;
 using X.PagedList;
 using ServiceStack.Templates;
 using System.Collections.Specialized;
-using MVCWebApp.AuthData;
+using Inventory.Infrastructure;
 
 namespace MVCWebApp.Controllers
 {
-    [ActionAttribute]
+    [GroupAuthAttribute]
     public class AdminController : Controller
     {
         #region > 把使用者資料群組撈出來放DataTable
-        public void getUSR(out DataTable dt)
+        public void GetUSR(out DataTable dt)
         {
             dt = new DataTable();
             dt.Columns.Add("uid", typeof(String));
@@ -108,32 +108,13 @@ namespace MVCWebApp.Controllers
         //用戶資料編輯(含分頁)
         public ActionResult DB_Admin()
         {
-            switch (Session["key"])
-            {
-                case "USER":
-                    return new RedirectResult(Url.Action("DB_User", "User"));
-                case "ADMIN":
-                    break;
-                default:
-                    return new RedirectResult(Url.Action("Login", "Account"));
-            }
-
             return View();
         }
         List<USR> USRshow = new List<USR>();
         public ActionResult USR_Admin(int? page)
         {
-            switch (Session["key"])
-            {
-                case "USER":
-                    return new RedirectResult(Url.Action("DB_User", "User"));
-                case "ADMIN":
-                    break;
-                default:
-                    return new RedirectResult(Url.Action("Login", "Account"));
-            }
             DataTable dt;
-            getUSR(out dt);
+            GetUSR(out dt);
             //把使用者資訊一行一行印出來
             foreach (DataRow dr in dt.Rows)
             {
@@ -151,16 +132,6 @@ namespace MVCWebApp.Controllers
         // 修改資訊
         public ActionResult USR_Edit(string id)
         {
-            switch (Session["key"])
-            {
-                case "USER":
-                    return new RedirectResult(Url.Action("DB_User", "User"));
-                case "ADMIN":
-                    break;
-                default:
-                    return new RedirectResult(Url.Action("Login", "Account"));
-            }
-
             string userid = id; //要刪除的資料
             Session["select"] = userid; //先把選擇的ID記下
 
@@ -225,16 +196,6 @@ namespace MVCWebApp.Controllers
         // 刪除帳號
         public ActionResult USR_Delete(string id)
         {
-            switch (Session["key"])
-            {
-                case "USER":
-                    return new RedirectResult(Url.Action("DB_User", "User"));
-                case "ADMIN":
-                    break;
-                default:
-                    return new RedirectResult(Url.Action("Login", "Account"));
-            }
-
             string userid = id; //要刪除的資料
             Session["select"] = userid; //先把選擇的ID記下
 
@@ -324,15 +285,6 @@ namespace MVCWebApp.Controllers
         // 權限編輯
         public ActionResult Group_Edit()
         {
-            switch (Session["key"])
-            {
-                case "USER":
-                    return new RedirectResult(Url.Action("DB_User", "User"));
-                case "ADMIN":
-                    break;
-                default:
-                    return new RedirectResult(Url.Action("Login", "Account"));
-            }
             return View();
         }
         [HttpPost]
@@ -424,16 +376,6 @@ namespace MVCWebApp.Controllers
         List<SYS_USER_GROUP_RELATION> ShowGroup = new List<SYS_USER_GROUP_RELATION>();
         public ActionResult GroupRelation(int? page)
         {
-            switch (Session["key"])
-            {
-                case "USER":
-                    return new RedirectResult(Url.Action("DB_User", "User"));
-                case "ADMIN":
-                    break;
-                default:
-                    return new RedirectResult(Url.Action("Login", "Account"));
-            }
-
             DataTable dt2;
             GetGroup(out dt2);
             //把使用者資訊一行一行印出來

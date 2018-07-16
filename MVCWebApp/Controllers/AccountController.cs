@@ -8,7 +8,7 @@ using System.Configuration;
 using MVCWebApp.Models;
 using System.Data;
 using System.Security.Cryptography;
-using MVCWebApp.AuthData;
+using Inventory.Infrastructure;
 
 namespace MVCWebApp.Controllers
 {
@@ -35,20 +35,20 @@ namespace MVCWebApp.Controllers
         }
         #endregion
 
-        #region > 帳號登入登出紀錄
+        // 紀錄log狀態
         static void LogState(bool state, string type, string uid)
         {
             using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
             {
                 connection.Open();
-                string strSQL = @"INSERT INTO public.logstate(boo_state, str_type, str_uid, str_time) VALUES(@state, @type, @uid, @time);"; //找尋帳號與密碼都相同的資料
+                string strSQL = @"INSERT INTO public.logstate(boo_state, str_type, str_uid, tsp_time) VALUES(@state, @type, @uid, @time);"; //找尋帳號與密碼都相同的資料
                 using (var cmd = new NpgsqlCommand(strSQL, connection))
                 {
                     // 預防SQL Injection
                     cmd.Parameters.AddWithValue("@state", state);
                     cmd.Parameters.AddWithValue("@type", type);
                     cmd.Parameters.AddWithValue("@uid", uid);
-                    cmd.Parameters.AddWithValue("@time", System.DateTime.Now.ToString("F"));
+                    cmd.Parameters.AddWithValue("@time", Convert.ToDateTime(System.DateTime.Now.ToString("F"))); //格式化成F 再轉回DateTime 以避免小於秒的值被記錄
 
                     cmd.ExecuteNonQuery();
                     cmd.Dispose();
@@ -56,25 +56,11 @@ namespace MVCWebApp.Controllers
                 }
             }
         }
-        #endregion 
-
 
         // 正常註冊頁面(get模式)
+        [GroupAuthAttribute]
         public ActionResult Signin()
         {
-            if (Session["key"] != null) //如果有Session直接轉跳X1
-            {
-                if (Session["key"] != null) //如果有Session直接轉跳X1
-                {
-                    switch (Session["key"])
-                    {
-                        case "USER":
-                            return new RedirectResult(Url.Action("DB_User", "User"));
-                        case "ADMIN":
-                            return new RedirectResult(Url.Action("DB_Admin", "Admin"));
-                    }
-                }
-            }
             return View();
         }
 
@@ -86,10 +72,8 @@ namespace MVCWebApp.Controllers
             string userpw = post.upw;
             string email = post.email;
 
-
-
             //呼叫創建
-            if (goSignin(userid, userpw, email))
+            if (GoSignin(userid, userpw, email))
             {
                 TempData["Msg2"] = "註冊成功，請登入！"; // 成功註冊，請用戶登入
                 return new RedirectResult(Url.Action("Login", "Account"));
@@ -102,7 +86,7 @@ namespace MVCWebApp.Controllers
         }
 
         //註冊功能
-        public bool goSignin(string uid, string upw1, string email)
+        public bool GoSignin(string uid, string upw1, string email)
         {
             try
             {
@@ -137,18 +121,9 @@ namespace MVCWebApp.Controllers
         }
 
         // 正常登入頁面(get模式)
+        [GroupAuthAttribute]
         public ActionResult Login()
         {
-            if (Session["key"] != null) //如果有Session直接轉跳X2
-            {
-                switch (Session["key"])
-                {
-                    case "USER":
-                        return new RedirectResult(Url.Action("DB_User", "User"));
-                    case "ADMIN":
-                        return new RedirectResult(Url.Action("DB_Admin", "Admin"));
-                }
-            }
             return View();
         }
         // 接收並驗證(post模式)
@@ -255,15 +230,9 @@ namespace MVCWebApp.Controllers
         }
 
         // 個人資訊頁面(get模式)
-        [ActionAttribute]
+        [GroupAuthAttribute]
         public ActionResult Profile()
         {
-            /*
-            if (Session["key"] == null) //如果有Session跳回登入
-            {
-                return new RedirectResult(Url.Action("Login", "Account"));
-            }
-            */
             return View();
         }
         // 個人資訊頁面(post模式)
