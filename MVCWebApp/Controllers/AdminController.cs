@@ -56,7 +56,7 @@ namespace MVCWebApp.Controllers
             dt2.Columns.Add("group_id", typeof(String));
             dt2.Columns.Add("create_date", typeof(DateTime));
             dt2.Columns.Add("create_id", typeof(String));
-            dt2.Columns.Add("upd_date", typeof(String));
+            dt2.Columns.Add("upd_date", typeof(DateTime));
             dt2.Columns.Add("upd_id", typeof(String));
             using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
             {

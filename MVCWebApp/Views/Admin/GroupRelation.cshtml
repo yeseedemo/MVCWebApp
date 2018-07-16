@@ -36,11 +36,11 @@
             </td>
             <td>
                 @item.CREATE_ID <br>
-                @item.CREATE_DATE
+                @item.CREATE_DATE.ToString("yyyy/MM/dd")
             </td>
             <td>
                 @item.UPD_ID <br>
-                @item.UPD_DATE
+                @item.UPD_DATE.ToString("yyyy/MM/dd")
             </td>
             <td>
                 @Html.DropDownList("GroupType")
