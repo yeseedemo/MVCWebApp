@@ -122,6 +122,7 @@ namespace MVCWebApp.Controllers
 
         // 正常登入頁面(get模式)
         [GroupAuthAttribute]
+        [LogStateAttribute]
         public ActionResult Login()
         {
             return View();
@@ -200,6 +201,7 @@ namespace MVCWebApp.Controllers
         }
 
         // 登出
+        [LogStateAttribute]
         public ActionResult Logout()
         {
             LogState(true, "logout", (string)Session["uid"]); //成功登出紀錄

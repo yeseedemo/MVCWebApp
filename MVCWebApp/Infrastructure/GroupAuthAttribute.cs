@@ -25,8 +25,6 @@ namespace Inventory.Infrastructure
                 CheckLogin(filterContext);
             }
             CheckPermission(filterContext);
-
-            return;
         }
         
         // 查看有沒有登入
@@ -47,71 +45,17 @@ namespace Inventory.Infrastructure
                     {
                         filterContext.Result = new RedirectResult("/User/DB_User");
                     }
-                    return;
+                    break;
                 case "User":
                     if (UsersGroup != "USER")
                     {
                         filterContext.Result = new RedirectResult("/Admin/DB_Admin");
                     }
-                    return;
+                    break;
                 default:
-                    return;
-
+                    break;
             }
         }
-
-
-
-
-        /*
-        public GroupAuthAttribute(AuthorizationContext filterContext)
-        {
-            
-            UsersGroup = Convert.ToString(filterContext.HttpContext.Session["key"]); // 群組
-            OriginPath = filterContext.RouteData.DataTokens["area"].ToString(); // 用戶來源
-            
-        }
-        
-
-        protected override bool AuthorizeCore(HttpContextBase httpContext) //驗證本體
-        {
-            if (UsersGroup != null) // 先看有沒有登入
-            {
-                switch (UsersGroup)
-                {
-                    case "Admin":
-                        if (OriginPath != "Admin")
-                        {
-                            return false;
-                        }
-                        return true;
-                    case "User":
-                        if (OriginPath != "User")
-                        {
-                            return false;
-                        }
-                        return true;
-                }
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        protected override void HandleUnauthorizedRequest(AuthorizationContext filterContext) // 如果沒有Session紀錄會override
-        {
-            if (GoRedirect)
-            {
-                filterContext.Result = new RedirectResult("/Account/Login"); //回到他該去的地方
-            }
-            else
-            {
-                filterContext.Result = new RedirectResult("/Account/Login"); //回到登入頁
-            }
-        }
-        */
     }
 }
 
