@@ -122,13 +122,13 @@ namespace MVCWebApp.Controllers
 
         // 正常登入頁面(get模式)
         [GroupAuthAttribute]
-        [LogStateAttribute]
         public ActionResult Login()
         {
             return View();
         }
         // 接收並驗證(post模式)
         [HttpPost]
+        [LogStateAttribute]
         public ActionResult Login(ACCOUNT post)
         {
             string userid = post.uid;
@@ -142,15 +142,15 @@ namespace MVCWebApp.Controllers
                 {
                     case "USER":
                         // 紀錄登入訊息
-                        LogState(true, "login", userid); //紀錄成功
+                        // LogState(true, "login", userid); //紀錄成功
                         return new RedirectResult(Url.Action("DB_User", "User"));
                     case "ADMIN":
                         // 紀錄登入訊息
-                        LogState(true, "login", userid); //紀錄成功
+                        // LogState(true, "login", userid); //紀錄成功
                         return new RedirectResult(Url.Action("DB_Admin", "Admin"));
                     default:
                         ViewBag.Msg = "此帳號發生問題，請聯絡管理人員"; // 沒有群組對應
-                        LogState(false, "login", userid); //紀錄失敗
+                        Session["tryfalse"] = userid;
                         return View();
 
                 }
@@ -158,8 +158,7 @@ namespace MVCWebApp.Controllers
             else
             {
                 ViewBag.Msg = "帳號或密碼錯誤，請重新輸入"; // 帳號或密碼沒有對應
-                // 紀錄登入訊息
-                LogState(false, "login", userid); //紀錄失敗
+                Session["tryfalse"] = userid;
                 return View();
             }
         }
@@ -204,7 +203,6 @@ namespace MVCWebApp.Controllers
         [LogStateAttribute]
         public ActionResult Logout()
         {
-            LogState(true, "logout", (string)Session["uid"]); //成功登出紀錄
             Session.Clear();
             return View();
         }
