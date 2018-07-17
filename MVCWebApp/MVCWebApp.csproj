@@ -194,7 +194,7 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Infrastructure\ComputeSha256Hash.cs" />
+    <Compile Include="helper\ComputeHelper.cs" />
     <Compile Include="Infrastructure\GroupAuthAttribute.cs" />
     <Compile Include="Infrastructure\LogStateAttribute.cs" />
     <Compile Include="Models\ACCOUNT.cs" />
@@ -264,7 +264,6 @@
     <Content Include="Views\Admin\GroupRelation.cshtml" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="helper\" />
     <Folder Include="Views\Default\" />
   </ItemGroup>
   <ItemGroup>

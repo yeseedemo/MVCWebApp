@@ -8,8 +8,23 @@ using System.Web.Mvc;
 
 namespace MVCWebApp.Models
 {
-    public class ACCOUNT
+    interface IUserAuthData
     {
+        String uid { get; set; }
+        String upw { get; set; }
+    }
+    public class ACCOUNT : IUserAuthData
+    {
+        /*
+        private string _uid;
+        private string _upw;
+
+        public ACCOUNT(String uid, String upw)
+        {
+            _uid = uid;
+            _upw = upw;
+        }
+*/
         // 帳號限制 字元 長度 不重複
         [Required]
         [Display(Name = "帳號")]

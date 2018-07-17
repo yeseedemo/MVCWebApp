@@ -2,21 +2,51 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.Security.Claims;
 using System.Web;
 using System.Web.Mvc;
+using MVCWebApp.Models;
 using Npgsql;
+using MVCWebApp.helper;
 
 namespace Inventory.Infrastructure
 {
-    public class LogStateAttribute : ActionFilterAttribute // 繼承動作與結果過濾(通用)
+    // 參考 http://www.neekgreen.com/2017/10/09/real-world-asp-net-mvc-action-filters/
+    /*
+    public class CurrentUserRequiredActionFilter : IActionFilter
+    {
+        public void OnActionExecuted(ActionExecutedContext filterContext) { }
+        public void OnActionExecuting(ActionExecutingContext filterContext)
+        {
+            // (1)
+        var items =
+            filterContext.ActionParameters.Values
+                .OfType<IUserAuthData>()
+                .ToArray();
+            
+            if (items.Any())
+            {
+                /* (2)
+                var identity =
+                filterContext.HttpContext.User.Identity as ClaimsIdentity;
+
+                var userId = identity.GetUserId();
+
+                // (3)
+                foreach (var item in items)
+                {
+                    item.CurrentUserId = userId;
+                }
+                
+            }
+        }
+    }
+    */
+
+    public class LogStateAttribute : ActionFilterAttribute , IActionFilter // 繼承動作與結果過濾(通用)
     {
         private string NowPath;
 
-        public LogStateAttribute()
-        {
-            // 需要有帶入參數才能使用
-            // NowPath = filterContext.RouteData.Values["action"].ToString();
-        }
         // Action 之前
         public override void OnActionExecuting(ActionExecutingContext filterContext)
         {
@@ -29,29 +59,88 @@ namespace Inventory.Infrastructure
         // Action 之後
         public override void OnActionExecuted(ActionExecutedContext filterContext)
         {
-            if (NowPath == "Login")
+            /*
+            var items = filterContext.ActionParameters.Values.OfType<IUserAuthData>().ToArray();
+            要用介面去model抓uid和upw
+
+            if (items.Any())
             {
-                if (Convert.ToString(filterContext.HttpContext.Session["uid"]) != "")
+            }
+            */
+
+                if (NowPath == "Login")
+            {
+                string uid = Convert.ToString(filterContext.HttpContext.Session["uid"]);
+                string upw = Convert.ToString(filterContext.HttpContext.Session["upw"]);
+                string ugroup = CheckLoginData(uid, upw);
+                bool Islogin = true;
+
+                switch (ugroup)
                 {
-                    LogState(true, NowPath, Convert.ToString(filterContext.HttpContext.Session["uid"]));
+                    case "USER":
+                        filterContext.HttpContext.Session["upw"] = ""; //清空密碼
+                        filterContext.HttpContext.Session["key"] = ugroup; // 加入群組
+                        filterContext.Result = new RedirectResult("/User/DB_User");
+                        break;
+                    case "ADMIN":
+                        filterContext.HttpContext.Session["upw"] = ""; //清空密碼
+                        filterContext.HttpContext.Session["key"] = ugroup; // 加入群組
+                        filterContext.Result = new RedirectResult("/Admin/DB_Admin");
+                        break;
+                    default:
+                        filterContext.Controller.ViewBag.Msg = "帳號或密碼錯誤，請重新輸入";
+                        Islogin = false;
+                        break;
                 }
-                else
-                {
-                    LogState(false, NowPath, Convert.ToString(filterContext.HttpContext.Session["tryfalse"]));
-                }
+                LogState(Islogin, "Login", uid);
             }
         }
+
+        /* 這邊用不到
         // Action Result 之前
         public override void OnResultExecuting(ResultExecutingContext filterContext) 
         {
-            //Action之後 皆在不適合使用
         }
         // Action Result 之後
         public override void OnResultExecuted(ResultExecutedContext filterContext) 
         {
-            //Action之後 不適合使用
         }
+        */
 
+        // 確認帳號密碼是否相符(密碼已先轉換) 回傳group(string)
+        private string CheckLoginData(string uid, string upw)
+        {
+            try
+            {
+                using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
+                {
+                    connection.Open();
+                    // 密碼用SHA256轉換
+                    //string upwsha256 = ComputeSha256Hash(upw);
+                    string strSQL = @"SELECT str_userid, str_passwd ,str_permission FROM public.account WHERE str_userid = @account AND str_passwd = @password;"; //找尋帳號與密碼都相同的資料
+                    using (var cmd = new NpgsqlCommand(strSQL, connection))
+                    {
+                        // 預防SQL Injection
+                        cmd.Parameters.AddWithValue("@account", uid);
+                        cmd.Parameters.AddWithValue("@password", upw);
+                        NpgsqlDataReader reader = cmd.ExecuteReader();
+                        if (reader.Read())
+                        {
+                            string TempGrorp = reader["str_permission"].ToString();
+                            cmd.Dispose();
+                            connection.Close();
+                            return TempGrorp;
+                        }
+                    }
+                }
+                return "";
+            }
+            catch (Exception ex)
+            {
+                string error = ex.ToString();
+                return "";
+            }
+        }
         // 回傳紀錄給DB
         private void LogState (bool state, string type, string uid)
         {
