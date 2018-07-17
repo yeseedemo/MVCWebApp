@@ -63,12 +63,15 @@ namespace Inventory.Infrastructure
             var items = filterContext.ActionParameters.Values.OfType<IUserAuthData>().ToArray();
             要用介面去model抓uid和upw
 
+            ActionExecutedContext好像沒有ActionParameters
+            但ActionExecutingContext有
+
             if (items.Any())
             {
             }
             */
 
-                if (NowPath == "Login")
+            if (NowPath == "Login")
             {
                 string uid = Convert.ToString(filterContext.HttpContext.Session["uid"]);
                 string upw = Convert.ToString(filterContext.HttpContext.Session["upw"]);
