@@ -38,7 +38,7 @@ namespace Inventory.Infrastructure
         // 查看有沒有權限在這頁
         private void CheckPermission(AuthorizationContext filterContext)
         {
-            switch (OriginPath)
+            switch (UsersGroup)
             {
                 case "Admin":
                     if (UsersGroup != "ADMIN")

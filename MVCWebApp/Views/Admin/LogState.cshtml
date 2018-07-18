@@ -1,0 +1,46 @@
+﻿<h4> 這裡是 @Session["uid"] 的Log檢視頁</h4><br>
+
+<!-- <span style="color:red">@TempData["result"]</span> <!-- 結果檢視 -->
+
+@model IEnumerable<MVCWebApp.Models.LOGSTATE>
+@using X.PagedList.Mvc;
+@using X.PagedList;
+<link href="/Content/PagedList.css" rel="stylesheet" type="text/css" /> 
+
+<form style="margin-left:10px;" method="post" action="">
+    <table class="table">
+        <tr>
+            <th>
+                結果
+            </th>
+            <th>
+                操作帳號
+            </th>
+            <th>
+                行為
+            </th>
+            <th>
+                操作時間
+            </th>
+        </tr>
+        @foreach (var item in ViewBag.OnePage)
+        {
+            <tr>
+                <td>
+                    @item.boo_state
+                </td>
+                <td>
+                    @item.str_uid
+                </td>
+                <td>
+                    @item.str_type
+                </td>
+                <td>
+                    @item.tsp_time.ToString("yyyy/MM/dd HH:mm:ss")
+                </td>
+            </tr>
+        }
+    </table>
+    @Html.PagedListPager((IPagedList)ViewBag.OnePage, page => Url.Action("LogState", new { page }))
+    <button type="submit" class="btn btn-primary">確認修改</button>
+</form>

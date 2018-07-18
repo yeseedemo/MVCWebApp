@@ -16,7 +16,7 @@ namespace MVCWebApp.Models
         [Display(Name = "新增時間")]
         [DataType(DataType.Date)]
         [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}")]
-        public DateTime CREATE_DATE { get; set; } //還沒修好
+        public DateTime CREATE_DATE { get; set; }
 
 
         [Display(Name = "新增人員")]
@@ -25,7 +25,7 @@ namespace MVCWebApp.Models
         [Display(Name = "修改時間")]
         [DataType(DataType.Date)]
         [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}")]
-        public DateTime UPD_DATE { get; set; } //還沒修好
+        public DateTime UPD_DATE { get; set; }
 
         [Display(Name = "修改人員")]
         public String UPD_ID { get; set; }

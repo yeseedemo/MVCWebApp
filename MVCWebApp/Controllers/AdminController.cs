@@ -12,35 +12,39 @@ using X.PagedList;
 using ServiceStack.Templates;
 using System.Collections.Specialized;
 using Inventory.Infrastructure;
+using MVCWebApp.helper;
 
 namespace MVCWebApp.Controllers
 {
     [GroupAuthAttribute]
     public class AdminController : Controller
     {
-        #region > 把使用者資料群組撈出來放DataTable
-        public void GetUSR(out DataTable dt)
+        # region > 統一實作DataTable抓DB資料
+        public void GetDataTable(out DataTable dt, string strSQL, Dictionary<string, Type> dicModel)
         {
+        
             dt = new DataTable();
-            dt.Columns.Add("uid", typeof(String));
-            dt.Columns.Add("email", typeof(String));
-            dt.Columns.Add("per", typeof(String));
+            // 查字典去創造dt的Columns
+            foreach (KeyValuePair<string, Type> item in dicModel)
+            {
+                dt.Columns.Add(item.Key, item.Value);
+            }
+            // 連結資料庫
             using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
             {
                 connection.Open();
-                string strSQL = @"SELECT str_userid, str_permission, str_email FROM public.account ORDER BY str_userid ASC";
                 using (NpgsqlCommand cmd = new NpgsqlCommand(strSQL, connection))
                 {
                     NpgsqlDataReader reader = cmd.ExecuteReader();
                     while (reader.Read())
                     {
                         DataRow row = dt.NewRow();
-                        row["uid"] = reader["str_userid"].ToString();
-                        row["email"] = reader["str_email"].ToString();
-                        row["per"] = reader["str_permission"].ToString();
+                        foreach (KeyValuePair<string, Type> item in dicModel)
+                        {
+                            row[item.Key] = reader[item.Key];
+                        }
                         dt.Rows.Add(row);
                     }
-
                     cmd.Dispose();
                     connection.Close();
                 }
@@ -48,64 +52,35 @@ namespace MVCWebApp.Controllers
         }
         #endregion
 
-        #region > 把使用者資料群組撈出來放DataTable 2
-        public void GetGroup(out DataTable dt2)
+        #region > 修改群組
+        public void ChangeGroup(string uid, string group)
         {
-            dt2 = new DataTable();
-            dt2.Columns.Add("user_id", typeof(String));
-            dt2.Columns.Add("group_id", typeof(String));
-            dt2.Columns.Add("create_date", typeof(DateTime));
-            dt2.Columns.Add("create_id", typeof(String));
-            dt2.Columns.Add("upd_date", typeof(DateTime));
-            dt2.Columns.Add("upd_id", typeof(String));
             using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
             {
                 connection.Open();
-                string strSQL = @"SELECT user_id, group_id, create_date, create_id, upd_date, upd_id FROM public.sy_user_group_relation ORDER BY user_id ASC";
-                using (NpgsqlCommand cmd2 = new NpgsqlCommand(strSQL, connection))
+                string strSQL = @"UPDATE public.sy_user_group_relation SET group_id = @group, upd_date = now(), upd_id = @upid WHERE user_id = @uid;";
+                using (var cmd = new NpgsqlCommand(strSQL, connection))
                 {
-                    NpgsqlDataReader reader = cmd2.ExecuteReader();
-                    while (reader.Read())
+                    cmd.Parameters.AddWithValue("@uid", uid); // 被修改人
+                    cmd.Parameters.AddWithValue("@upid", Session["uid"]); //修改者
+                    //被修改者群組
+                    if (group == "1")
                     {
-                        DataRow row = dt2.NewRow();
-                        row["user_id"] = reader["user_id"].ToString();
-                        row["group_id"] = reader["group_id"].ToString();
-                        row["create_date"] = reader["create_date"];
-                        row["create_id"] = reader["create_id"].ToString();
-                        row["upd_date"] = reader["upd_date"];
-                        row["upd_id"] = reader["upd_id"].ToString();
-                        dt2.Rows.Add(row);
+                        cmd.Parameters.AddWithValue("@group", "Admin");
                     }
-
-                    cmd2.Dispose();
+                    else
+                    {
+                        cmd.Parameters.AddWithValue("@group", "User");
+                    }
+                    cmd.ExecuteNonQuery(); //執行修改
+                    cmd.Dispose();
                     connection.Close();
                 }
             }
         }
         #endregion
 
-        #region > 把密碼用SHA256計算
-        static string ComputeSha256Hash(string rawData)
-        {
-            // Create a SHA256   
-            using (SHA256 sha256Hash = SHA256.Create())
-            {
-                // ComputeHash - returns byte array  
-                byte[] bytes = sha256Hash.ComputeHash(System.Text.Encoding.UTF8.GetBytes(rawData));
-
-                // Convert byte array to a string   
-                var builder = new System.Text.StringBuilder();
-                for (int i = 0; i < bytes.Length; i++)
-                {
-                    builder.Append(bytes[i].ToString("x2"));
-                }
-
-                return builder.ToString();
-            }
-        }
-        #endregion
-
-        //用戶資料編輯(含分頁)
+        //用戶資料編輯
         public ActionResult DB_Admin()
         {
             return View();
@@ -114,11 +89,22 @@ namespace MVCWebApp.Controllers
         public ActionResult USR_Admin(int? page)
         {
             DataTable dt;
-            GetUSR(out dt);
+            string strSQL = @"SELECT str_userid, str_permission, str_email FROM public.account ORDER BY str_userid ASC";
+            Dictionary<string, Type> dicModel = new Dictionary<string, Type>();
+            dicModel.Add("str_userid", typeof(string));
+            dicModel.Add("str_permission", typeof(string));
+            dicModel.Add("str_email", typeof(string));
+
+            GetDataTable(out dt, strSQL, dicModel);
             //把使用者資訊一行一行印出來
             foreach (DataRow dr in dt.Rows)
             {
-                USRshow.Add(new USR() { uid = dr["uid"].ToString(), email = dr["email"].ToString(), per = dr["per"].ToString() });
+                USRshow.Add(new USR()
+                {
+                    uid = (string)Convert.ChangeType(dr["str_userid"], typeof(string)),
+                    email = (string)Convert.ChangeType(dr["str_email"], typeof(string)),
+                    per = (string)Convert.ChangeType(dr["str_permission"], typeof(string))
+                });
             }
 
             var products = USRshow; //資料集
@@ -253,7 +239,7 @@ namespace MVCWebApp.Controllers
                 {
                     connection.Open();
                     // 密碼用SHA256轉換
-                    string upwsha256 = ComputeSha256Hash(upw);
+                    string upwsha256 = ComputeHelper.ComputeSha256Hash(upw);
                     string strSQL = @"SELECT str_userid, str_passwd FROM public.account WHERE str_userid = @account AND str_passwd = @password;";
 
                     using (var cmd = new NpgsqlCommand(strSQL, connection))
@@ -376,25 +362,34 @@ namespace MVCWebApp.Controllers
         List<SYS_USER_GROUP_RELATION> ShowGroup = new List<SYS_USER_GROUP_RELATION>();
         public ActionResult GroupRelation(int? page)
         {
-            DataTable dt2;
-            GetGroup(out dt2);
+            DataTable dt;
+            string strSQL = @"SELECT user_id, group_id, create_date, create_id, upd_date, upd_id FROM public.sy_user_group_relation ORDER BY user_id ASC";
+            Dictionary<string, Type> dicModel = new Dictionary<string, Type>();
+            dicModel.Add("user_id", typeof(string));
+            dicModel.Add("group_id", typeof(string));
+            dicModel.Add("create_date", typeof(DateTime));
+            dicModel.Add("create_id", typeof(string));
+            dicModel.Add("upd_date", typeof(DateTime));
+            dicModel.Add("upd_id", typeof(string));
+
+            GetDataTable(out dt, strSQL, dicModel);
             //把使用者資訊一行一行印出來
-            foreach (DataRow dr2 in dt2.Rows)
+            foreach (DataRow dr in dt.Rows)
             {
                 ShowGroup.Add(new SYS_USER_GROUP_RELATION()
                 {
-                    USERID = dr2["user_id"].ToString(),
-                    GROUP_ID = dr2["group_id"].ToString(),
-                    CREATE_DATE = Convert.ToDateTime(dr2["create_date"]),
-                    CREATE_ID = dr2["create_id"].ToString(),
-                    UPD_DATE = Convert.ToDateTime(dr2["upd_date"]),
-                    UPD_ID = dr2["UPD_ID"].ToString()
+                    USERID = (string)Convert.ChangeType(dr["user_id"], typeof(string)),
+                    GROUP_ID = (string)Convert.ChangeType(dr["group_id"], typeof(string)),
+                    CREATE_DATE = (DateTime)Convert.ChangeType(dr["create_date"], typeof(DateTime)),
+                    CREATE_ID = (string)Convert.ChangeType(dr["create_id"], typeof(string)),
+                    UPD_DATE = (DateTime)Convert.ChangeType(dr["upd_date"], typeof(DateTime)),
+                    UPD_ID = (string)Convert.ChangeType(dr["upd_id"], typeof(string)),
                 });
             }
             var products = ShowGroup; //資料集
             var pageNumber = page ?? 1; //預設分頁
             var onePageOfGROUP = products.ToPagedList(pageNumber, 4); //每頁長度     
-            ViewBag.OnePageOfGROUP = onePageOfGROUP;
+            ViewBag.OnePageOfGROUP = onePageOfGROUP; //回傳view
             //變更群組用的下拉選單
             List<SelectListItem> Groups = new List<SelectListItem>();
             Groups.Add(new SelectListItem { Text = "不修改", Value = "0" });
@@ -421,31 +416,39 @@ namespace MVCWebApp.Controllers
             TempData["msg"] = "修改完成";
             return Redirect(Request.UrlReferrer.ToString()); ;
         }
-        //修改群組
-        public void ChangeGroup(string uid, string group)
+
+        List<LOGSTATE> ShowState = new List<LOGSTATE>();
+        public ActionResult LogState(int? page)
         {
-            using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
+            DataTable dt;
+            string strSQL = @"SELECT boo_state, str_uid, str_type, tsp_time FROM public.logstate;";
+            Dictionary<string, Type> dicModel = new Dictionary<string,Type>();
+            dicModel.Add("boo_state", typeof(bool));
+            dicModel.Add("str_uid", typeof(string));
+            dicModel.Add("str_type", typeof(string));
+            dicModel.Add("tsp_time", typeof(DateTime));
+
+            GetDataTable(out dt, strSQL, dicModel);
+            foreach (DataRow dr in dt.Rows)
             {
-                connection.Open();
-                string strSQL = @"UPDATE public.sy_user_group_relation SET group_id = @group, upd_date = now(), upd_id = @upid WHERE user_id = @uid;";
-                using (var cmd = new NpgsqlCommand(strSQL, connection))
+                ShowState.Add(new LOGSTATE()
                 {
-                    cmd.Parameters.AddWithValue("@uid", uid); // 被修改人
-                    cmd.Parameters.AddWithValue("@upid", Session["uid"]); //修改者
-                    //被修改者群組
-                    if (group == "1")
-                    {
-                        cmd.Parameters.AddWithValue("@group", "Admin");
-                    }
-                    else
-                    {
-                        cmd.Parameters.AddWithValue("@group", "User");
-                    }
-                    cmd.ExecuteNonQuery(); //執行修改
-                    cmd.Dispose();
-                    connection.Close();
-                }
+                    boo_state = (bool) Convert.ChangeType(dr["boo_state"], typeof(bool)),
+                    str_uid = (string) Convert.ChangeType(dr["str_uid"], typeof(string)),
+                    str_type = (string) Convert.ChangeType(dr["str_type"], typeof(string)),
+                    tsp_time = (DateTime) Convert.ChangeType(dr["tsp_time"], typeof(DateTime))
+                });
             }
+            var Log = ShowState; //資料集
+            var pageNumber = page ?? 1; //預設分頁
+            var onePageOfLog = Log.ToPagedList(pageNumber, 10); //每頁長度     
+            ViewBag.OnePage = onePageOfLog; //回傳view
+            return View();
+        }
+        [HttpPost]
+        public ActionResult LogState(FormCollection post)
+        {
+            return View();
         }
     }
 }

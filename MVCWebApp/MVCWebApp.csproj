@@ -200,6 +200,7 @@
     <Compile Include="Models\ACCOUNT.cs" />
     <Compile Include="Models\APILOG.cs" />
     <Compile Include="Models\GROUP.cs" />
+    <Compile Include="Models\LOGSTATE.cs" />
     <Compile Include="Models\ProfileEdit.cs" />
     <Compile Include="Models\SYS_FUNCTION.cs" />
     <Compile Include="Models\SYS_GROUP_PERMISSION.cs" />
@@ -262,6 +263,7 @@
     <Content Include="Views\Admin\USR_Delete.cshtml" />
     <Content Include="Views\Admin\Group_Edit.cshtml" />
     <Content Include="Views\Admin\GroupRelation.cshtml" />
+    <Content Include="Views\Admin\LogState.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Views\Default\" />
