@@ -12,81 +12,44 @@ using MVCWebApp.helper;
 namespace Inventory.Infrastructure
 {
     // 參考 http://www.neekgreen.com/2017/10/09/real-world-asp-net-mvc-action-filters/
-    /*
-    public class CurrentUserRequiredActionFilter : IActionFilter
-    {
-        public void OnActionExecuted(ActionExecutedContext filterContext) { }
-        public void OnActionExecuting(ActionExecutingContext filterContext)
-        {
-            // (1)
-        var items =
-            filterContext.ActionParameters.Values
-                .OfType<IUserAuthData>()
-                .ToArray();
-            
-            if (items.Any())
-            {
-                /* (2)
-                var identity =
-                filterContext.HttpContext.User.Identity as ClaimsIdentity;
-
-                var userId = identity.GetUserId();
-
-                // (3)
-                foreach (var item in items)
-                {
-                    item.CurrentUserId = userId;
-                }
-                
-            }
-        }
-    }
-    */
 
     public class LogStateAttribute : ActionFilterAttribute , IActionFilter // 繼承動作與結果過濾(通用)
     {
         private string NowPath;
-
+        private string uid;
+        private string upw;
         // Action 之前
         public override void OnActionExecuting(ActionExecutingContext filterContext)
         {
             NowPath = filterContext.RouteData.Values["action"].ToString(); //先抓取來源Action
-            if (NowPath == "Logout")
+            switch (NowPath)
             {
-                LogState(true, NowPath, Convert.ToString(filterContext.HttpContext.Session["uid"]));
+                case "Logout":
+                    LogState(true, NowPath, Convert.ToString(filterContext.HttpContext.Session["uid"]));
+                    break;
+                case "Login":
+                    var items = filterContext.ActionParameters.Values.OfType<IUserAuthData>().ToArray();
+                    uid = items[0].uid;
+                    upw = ComputeHelper.ComputeSha256Hash(items[0].upw);
+                    break;
             }
         }
         // Action 之後
         public override void OnActionExecuted(ActionExecutedContext filterContext)
         {
-            /*
-            var items = filterContext.ActionParameters.Values.OfType<IUserAuthData>().ToArray();
-            要用介面去model抓uid和upw
-
-            ActionExecutedContext好像沒有ActionParameters
-            但ActionExecutingContext有
-
-            if (items.Any())
-            {
-            }
-            */
-
             if (NowPath == "Login")
             {
-                string uid = Convert.ToString(filterContext.HttpContext.Session["uid"]);
-                string upw = Convert.ToString(filterContext.HttpContext.Session["upw"]);
                 string ugroup = CheckLoginData(uid, upw);
                 bool Islogin = true;
-
                 switch (ugroup)
                 {
                     case "USER":
-                        filterContext.HttpContext.Session["upw"] = ""; //清空密碼
+                        filterContext.HttpContext.Session["uid"] = uid; //加入使用者
                         filterContext.HttpContext.Session["key"] = ugroup; // 加入群組
                         filterContext.Result = new RedirectResult("/User/DB_User");
                         break;
                     case "ADMIN":
-                        filterContext.HttpContext.Session["upw"] = ""; //清空密碼
+                        filterContext.HttpContext.Session["uid"] = uid; //加入使用者
                         filterContext.HttpContext.Session["key"] = ugroup; // 加入群組
                         filterContext.Result = new RedirectResult("/Admin/DB_Admin");
                         break;
@@ -95,21 +58,9 @@ namespace Inventory.Infrastructure
                         Islogin = false;
                         break;
                 }
-                LogState(Islogin, "Login", uid);
+                LogState(Islogin, NowPath, uid);
             }
         }
-
-        /* 這邊用不到
-        // Action Result 之前
-        public override void OnResultExecuting(ResultExecutingContext filterContext) 
-        {
-        }
-        // Action Result 之後
-        public override void OnResultExecuted(ResultExecutedContext filterContext) 
-        {
-        }
-        */
-
         // 確認帳號密碼是否相符(密碼已先轉換) 回傳group(string)
         private string CheckLoginData(string uid, string upw)
         {
@@ -170,5 +121,6 @@ namespace Inventory.Infrastructure
      * login > 在action之後 (成功或失敗)
      * logout > 在action之前 (成功) 
      * 參考 https://dotblogs.com.tw/inblackbox/2013/06/07/105354
+     * interface 參考 http://www.neekgreen.com/2017/10/09/real-world-asp-net-mvc-action-filters/
      */
 }

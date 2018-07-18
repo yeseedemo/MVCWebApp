@@ -24,7 +24,7 @@ namespace MVCWebApp.Models
             _uid = uid;
             _upw = upw;
         }
-*/
+        */
         // 帳號限制 字元 長度 不重複
         [Required]
         [Display(Name = "帳號")]
