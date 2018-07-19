@@ -417,11 +417,12 @@ namespace MVCWebApp.Controllers
             return Redirect(Request.UrlReferrer.ToString()); ;
         }
 
+        // 顯示登出入紀錄
         List<LOGSTATE> ShowState = new List<LOGSTATE>();
         public ActionResult LogState(int? page)
         {
             DataTable dt;
-            string strSQL = @"SELECT boo_state, str_uid, str_type, tsp_time FROM public.logstate;";
+            string strSQL = @"SELECT boo_state, str_uid, str_type, tsp_time FROM public.logstate;"; // 要換掉的語法
             Dictionary<string, Type> dicModel = new Dictionary<string,Type>();
             dicModel.Add("boo_state", typeof(bool));
             dicModel.Add("str_uid", typeof(string));
@@ -445,11 +446,14 @@ namespace MVCWebApp.Controllers
             ViewBag.OnePage = onePageOfLog; //回傳view
             return View();
         }
+
+        /* 過濾使用get 不需要用到post傳
         [HttpPost]
         public ActionResult LogState(FormCollection post)
         {
             return View();
         }
+        */
     }
 }
 

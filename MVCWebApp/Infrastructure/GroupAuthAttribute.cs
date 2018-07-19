@@ -16,7 +16,7 @@ namespace Inventory.Infrastructure
         // 抓取參數 並呼叫檢查
         public override void OnAuthorization(AuthorizationContext filterContext)
         {
-            UsersGroup = Convert.ToString(filterContext.HttpContext.Session["key"]); // 群組
+            UsersGroup = Convert.ToString(filterContext.HttpContext.Session["group"]); // 群組
             OriginPath = filterContext.RouteData.Values["controller"].ToString(); // 用戶來源
             NowPath = filterContext.RouteData.Values["action"].ToString(); // 用戶目的
 

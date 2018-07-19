@@ -15,23 +15,12 @@ namespace MVCWebApp.Models
     }
     public class ACCOUNT : IUserAuthData
     {
-        /*
-        private string _uid;
-        private string _upw;
-
-        public ACCOUNT(String uid, String upw)
-        {
-            _uid = uid;
-            _upw = upw;
-        }
-        */
-        // 帳號限制 字元 長度 不重複
         [Required]
         [Display(Name = "帳號")]
         [RegularExpression(@"[a-zA-Z0-9]*$", ErrorMessage = "帳號僅能有英文或數字")]
         [MaxLength(20, ErrorMessage = "帳號最多20個字")]
         [MinLength(8, ErrorMessage = "帳號最少8個字")]
-        [Remote("CheckAccount", "Account", HttpMethod = "POST"/*, ErrorMessage = "Email already exists"*/)] // 沒辦法運行
+        [Remote("CheckAccount", "Account", HttpMethod = "POST")]
         public String uid { get; set; } //不要特殊符號
 
         //密碼限制 長度 

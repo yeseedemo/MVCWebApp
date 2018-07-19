@@ -1,46 +1,120 @@
 ﻿<h4> 這裡是 @Session["uid"] 的Log檢視頁</h4><br>
 
-<!-- <span style="color:red">@TempData["result"]</span> <!-- 結果檢視 -->
-
 @model IEnumerable<MVCWebApp.Models.LOGSTATE>
 @using X.PagedList.Mvc;
 @using X.PagedList;
-<link href="/Content/PagedList.css" rel="stylesheet" type="text/css" /> 
+<script type="text/javascript" src="~/Scripts/jquery-3.3.1.js"></script> <!-- Aways on top-->
+<script src="~/Scripts/jquery-ui-1.12.1.js"></script>
+<link rel="stylesheet" href="~/Content/bootstrap.css" />
+<script src="~/Scripts/bootstrap.js"></script>
+
+<link href="/Content/PagedList.css" rel="stylesheet" type="text/css" />
+
+
+<link rel="stylesheet" href="~/Content/bootstrap-select.css" />
+<script src="~/Scripts/bootstrap-select.js"></script>
+
+<script src="~/Scripts/modernizr-2.8.3.js"></script>
+<script type="text/javascript" src="~/Scripts/moment.js"></script>
+<link rel="stylesheet" href="~/Content/bootstrap-datetimepicker.css" />
+<script type="text/javascript" src="~/Scripts/bootstrap-datetimepicker.js"></script>
+
+<table class="table">
+    <tr>
+        <th>
+            結果
+        </th>
+        <th>
+            操作帳號
+        </th>
+        <th>
+            行為
+        </th>
+        <th>
+            操作時間
+        </th>
+    </tr>
+    @foreach (var item in ViewBag.OnePage)
+    {
+        <tr>
+            <td>
+                @item.boo_state
+            </td>
+            <td>
+                @item.str_uid
+            </td>
+            <td>
+                @item.str_type
+            </td>
+            <td>
+                @item.tsp_time.ToString("yyyy/MM/dd HH:mm:ss")
+            </td>
+        </tr>
+    }
+</table>
 
 <form style="margin-left:10px;" method="post" action="">
-    <table class="table">
-        <tr>
-            <th>
-                結果
-            </th>
-            <th>
-                操作帳號
-            </th>
-            <th>
-                行為
-            </th>
-            <th>
-                操作時間
-            </th>
-        </tr>
-        @foreach (var item in ViewBag.OnePage)
-        {
-            <tr>
-                <td>
-                    @item.boo_state
-                </td>
-                <td>
-                    @item.str_uid
-                </td>
-                <td>
-                    @item.str_type
-                </td>
-                <td>
-                    @item.tsp_time.ToString("yyyy/MM/dd HH:mm:ss")
-                </td>
-            </tr>
-        }
-    </table>
     @Html.PagedListPager((IPagedList)ViewBag.OnePage, page => Url.Action("LogState", new { page }))
+    <!-- 是不是重新跑了一次程式 只是預設頁換掉? -->
+    <select class="selectpicker" >
+        <!-- 操作狀態 -->
+        <option>全部</option>
+        <option>成功</option>
+        <option>失敗</option>
+    </select>
+    
+    <select class="selectpicker" multiple>
+        <!-- 操作群組-->
+        <option>Admin</option>
+        <option>User</option>
+        <option>Other</option>
+    </select>
+
+    <!-- 這邊是日期的部分
+    <div class="container">
+        <div class='col-md-5'>
+            <div class="form-group">
+                <div class='input-group date' id='datetimepicker6'>
+                    <input type='text' class="form-control" />
+                    <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class='col-md-5'>
+            <div class="form-group">
+                <div class='input-group date' id='datetimepicker7'>
+                    <input type='text' class="form-control" />
+                    <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        $(function () {
+            $('#datetimepicker6').datetimepicker();
+            $('#datetimepicker7').datetimepicker({
+                useCurrent: false //Important! See issue #1075
+            });
+            $("#datetimepicker6").on("dp.change", function (e) {
+                $('#datetimepicker7').data("DateTimePicker").minDate(e.date);
+            });
+            $("#datetimepicker7").on("dp.change", function (e) {
+                $('#datetimepicker6').data("DateTimePicker").maxDate(e.date);
+            });
+        });
+    </script>
+        -->
+
     <button type="submit" class="btn btn-primary">確認修改</button>
 </form>
+
+<!--
+    bootstrap-select 參考
+    https://silviomoreto.github.io/bootstrap-select/examples/#basic-examples
+    Bootstrap 3 Datepicker 參考
+    https://eonasdan.github.io/bootstrap-datetimepicker/
+-->

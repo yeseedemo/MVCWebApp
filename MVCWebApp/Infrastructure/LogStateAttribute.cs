@@ -13,7 +13,7 @@ namespace Inventory.Infrastructure
 {
     // 參考 http://www.neekgreen.com/2017/10/09/real-world-asp-net-mvc-action-filters/
 
-    public class LogStateAttribute : ActionFilterAttribute , IActionFilter // 繼承動作與結果過濾(通用)
+    public class LogStateAttribute : ActionFilterAttribute, IActionFilter // 繼承動作與結果過濾(通用)
     {
         private string NowPath;
         private string uid;
@@ -26,6 +26,7 @@ namespace Inventory.Infrastructure
             {
                 case "Logout":
                     LogState(true, NowPath, Convert.ToString(filterContext.HttpContext.Session["uid"]));
+                    filterContext.HttpContext.Session.Clear();
                     break;
                 case "Login":
                     var items = filterContext.ActionParameters.Values.OfType<IUserAuthData>().ToArray();
@@ -45,12 +46,12 @@ namespace Inventory.Infrastructure
                 {
                     case "USER":
                         filterContext.HttpContext.Session["uid"] = uid; //加入使用者
-                        filterContext.HttpContext.Session["key"] = ugroup; // 加入群組
+                        filterContext.HttpContext.Session["group"] = ugroup; // 加入群組
                         filterContext.Result = new RedirectResult("/User/DB_User");
                         break;
                     case "ADMIN":
                         filterContext.HttpContext.Session["uid"] = uid; //加入使用者
-                        filterContext.HttpContext.Session["key"] = ugroup; // 加入群組
+                        filterContext.HttpContext.Session["group"] = ugroup; // 加入群組
                         filterContext.Result = new RedirectResult("/Admin/DB_Admin");
                         break;
                     default:
@@ -64,39 +65,31 @@ namespace Inventory.Infrastructure
         // 確認帳號密碼是否相符(密碼已先轉換) 回傳group(string)
         private string CheckLoginData(string uid, string upw)
         {
-            try
+            using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
             {
-                using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
+                connection.Open();
+                // 密碼用SHA256轉換
+                //string upwsha256 = ComputeSha256Hash(upw);
+                string strSQL = @"SELECT str_userid, str_passwd ,str_permission FROM public.account WHERE str_userid = @account AND str_passwd = @password;"; //找尋帳號與密碼都相同的資料
+                using (var cmd = new NpgsqlCommand(strSQL, connection))
                 {
-                    connection.Open();
-                    // 密碼用SHA256轉換
-                    //string upwsha256 = ComputeSha256Hash(upw);
-                    string strSQL = @"SELECT str_userid, str_passwd ,str_permission FROM public.account WHERE str_userid = @account AND str_passwd = @password;"; //找尋帳號與密碼都相同的資料
-                    using (var cmd = new NpgsqlCommand(strSQL, connection))
+                    // 預防SQL Injection
+                    cmd.Parameters.AddWithValue("@account", uid);
+                    cmd.Parameters.AddWithValue("@password", upw);
+                    NpgsqlDataReader reader = cmd.ExecuteReader();
+                    if (reader.Read())
                     {
-                        // 預防SQL Injection
-                        cmd.Parameters.AddWithValue("@account", uid);
-                        cmd.Parameters.AddWithValue("@password", upw);
-                        NpgsqlDataReader reader = cmd.ExecuteReader();
-                        if (reader.Read())
-                        {
-                            string TempGrorp = reader["str_permission"].ToString();
-                            cmd.Dispose();
-                            connection.Close();
-                            return TempGrorp;
-                        }
+                        string TempGrorp = reader["str_permission"].ToString();
+                        cmd.Dispose();
+                        connection.Close();
+                        return TempGrorp;
                     }
                 }
-                return "";
             }
-            catch (Exception ex)
-            {
-                string error = ex.ToString();
-                return "";
-            }
+            return "";
         }
         // 回傳紀錄給DB
-        private void LogState (bool state, string type, string uid)
+        private void LogState(bool state, string type, string uid)
         {
             using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
             {

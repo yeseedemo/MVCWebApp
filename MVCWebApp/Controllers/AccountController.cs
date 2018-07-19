@@ -45,36 +45,28 @@ namespace MVCWebApp.Controllers
         //註冊功能
         public bool GoSignin(string uid, string upw1, string email)
         {
-            try
+            if (ModelState.IsValid) // 如果model沒有報錯誤訊息才能通過
             {
-                if (ModelState.IsValid) // 如果model沒有報錯誤訊息才能通過
+                using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
                 {
-                    using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
+                    connection.Open();
+                    // 密碼用SHA256轉換
+                    string upwsha256 = ComputeHelper.ComputeSha256Hash(upw1);
+                    string strSQL = @"INSERT INTO public.account(str_userid, str_passwd, str_permission,str_email)VALUES ( @account, @password,'USER',@email ); "; //新增一筆用戶資料
+                    using (NpgsqlCommand cmd = new NpgsqlCommand(strSQL, connection))
                     {
-                        connection.Open();
-                        // 密碼用SHA256轉換
-                        string upwsha256 = ComputeHelper.ComputeSha256Hash(upw1);
-                        string strSQL = @"INSERT INTO public.account(str_userid, str_passwd, str_permission,str_email)VALUES ( @account, @password,'USER',@email ); "; //新增一筆用戶資料
-                        using (NpgsqlCommand cmd = new NpgsqlCommand(strSQL, connection))
-                        {
-                            // 預防SQL Injection
-                            cmd.Parameters.AddWithValue("@account", uid);
-                            cmd.Parameters.AddWithValue("@password", upwsha256);
-                            cmd.Parameters.AddWithValue("@email", email);
-                            cmd.ExecuteNonQuery();
-                            cmd.Dispose();
-                            connection.Close();
-                            return true;
-                        }
+                        // 預防SQL Injection
+                        cmd.Parameters.AddWithValue("@account", uid);
+                        cmd.Parameters.AddWithValue("@password", upwsha256);
+                        cmd.Parameters.AddWithValue("@email", email);
+                        cmd.ExecuteNonQuery();
+                        cmd.Dispose();
+                        connection.Close();
+                        return true;
                     }
                 }
-                return false;
             }
-            catch (Exception ex)
-            {
-                string error = ex.ToString();
-                return false;
-            }
+            return false;
         }
 
         // 正常登入頁面(get模式)
@@ -88,8 +80,6 @@ namespace MVCWebApp.Controllers
         [LogStateAttribute]
         public ActionResult Login(ACCOUNT post)
         {
-            // Session["uid"] = post.uid;
-            // Session["upw"] = ComputeHelper.ComputeSha256Hash(post.upw);
             return View();
         }
 
@@ -97,7 +87,6 @@ namespace MVCWebApp.Controllers
         [LogStateAttribute]
         public ActionResult Logout()
         {
-            Session.Clear();
             return View();
         }
 
