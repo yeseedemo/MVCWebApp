@@ -19,67 +19,6 @@ namespace MVCWebApp.Controllers
     [GroupAuthAttribute]
     public class AdminController : Controller
     {
-        # region > 統一實作DataTable抓DB資料
-        public void GetDataTable(out DataTable dt, string strSQL, Dictionary<string, Type> dicModel)
-        {
-        
-            dt = new DataTable();
-            // 查字典去創造dt的Columns
-            foreach (KeyValuePair<string, Type> item in dicModel)
-            {
-                dt.Columns.Add(item.Key, item.Value);
-            }
-            // 連結資料庫
-            using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
-            {
-                connection.Open();
-                using (NpgsqlCommand cmd = new NpgsqlCommand(strSQL, connection))
-                {
-                    NpgsqlDataReader reader = cmd.ExecuteReader();
-                    while (reader.Read())
-                    {
-                        DataRow row = dt.NewRow();
-                        foreach (KeyValuePair<string, Type> item in dicModel)
-                        {
-                            row[item.Key] = reader[item.Key];
-                        }
-                        dt.Rows.Add(row);
-                    }
-                    cmd.Dispose();
-                    connection.Close();
-                }
-            }
-        }
-        #endregion
-
-        #region > 修改群組
-        public void ChangeGroup(string uid, string group)
-        {
-            using (NpgsqlConnection connection = new NpgsqlConnection(ConfigurationManager.AppSettings["DB"])) //連線 用web.config裡的地址
-            {
-                connection.Open();
-                string strSQL = @"UPDATE public.sy_user_group_relation SET group_id = @group, upd_date = now(), upd_id = @upid WHERE user_id = @uid;";
-                using (var cmd = new NpgsqlCommand(strSQL, connection))
-                {
-                    cmd.Parameters.AddWithValue("@uid", uid); // 被修改人
-                    cmd.Parameters.AddWithValue("@upid", Session["uid"]); //修改者
-                    //被修改者群組
-                    if (group == "1")
-                    {
-                        cmd.Parameters.AddWithValue("@group", "Admin");
-                    }
-                    else
-                    {
-                        cmd.Parameters.AddWithValue("@group", "User");
-                    }
-                    cmd.ExecuteNonQuery(); //執行修改
-                    cmd.Dispose();
-                    connection.Close();
-                }
-            }
-        }
-        #endregion
-
         //用戶資料編輯
         public ActionResult DB_Admin()
         {
@@ -88,14 +27,13 @@ namespace MVCWebApp.Controllers
         List<USR> USRshow = new List<USR>();
         public ActionResult USR_Admin(int? page)
         {
-            DataTable dt;
             string strSQL = @"SELECT str_userid, str_permission, str_email FROM public.account ORDER BY str_userid ASC";
             Dictionary<string, Type> dicModel = new Dictionary<string, Type>();
             dicModel.Add("str_userid", typeof(string));
             dicModel.Add("str_permission", typeof(string));
             dicModel.Add("str_email", typeof(string));
 
-            GetDataTable(out dt, strSQL, dicModel);
+            DataTable dt = GetDatabase.GetDT(strSQL, dicModel);
             //把使用者資訊一行一行印出來
             foreach (DataRow dr in dt.Rows)
             {
@@ -362,7 +300,6 @@ namespace MVCWebApp.Controllers
         List<SYS_USER_GROUP_RELATION> ShowGroup = new List<SYS_USER_GROUP_RELATION>();
         public ActionResult GroupRelation(int? page)
         {
-            DataTable dt;
             string strSQL = @"SELECT user_id, group_id, create_date, create_id, upd_date, upd_id FROM public.sy_user_group_relation ORDER BY user_id ASC";
             Dictionary<string, Type> dicModel = new Dictionary<string, Type>();
             dicModel.Add("user_id", typeof(string));
@@ -372,7 +309,7 @@ namespace MVCWebApp.Controllers
             dicModel.Add("upd_date", typeof(DateTime));
             dicModel.Add("upd_id", typeof(string));
 
-            GetDataTable(out dt, strSQL, dicModel);
+            DataTable dt = GetDatabase.GetDT(strSQL, dicModel);
             //把使用者資訊一行一行印出來
             foreach (DataRow dr in dt.Rows)
             {
@@ -392,9 +329,9 @@ namespace MVCWebApp.Controllers
             ViewBag.OnePageOfGROUP = onePageOfGROUP; //回傳view
             //變更群組用的下拉選單
             List<SelectListItem> Groups = new List<SelectListItem>();
-            Groups.Add(new SelectListItem { Text = "不修改", Value = "0" });
-            Groups.Add(new SelectListItem { Text = "Admin", Value = "1" });
-            Groups.Add(new SelectListItem { Text = "User", Value = "2" });
+            Groups.Add(new SelectListItem { Text = "不修改", Value = "none" });
+            Groups.Add(new SelectListItem { Text = "Admin", Value = "admin" });
+            Groups.Add(new SelectListItem { Text = "User", Value = "user" });
             ViewBag.GroupType = Groups;
 
             return View();
@@ -407,9 +344,9 @@ namespace MVCWebApp.Controllers
             int count = 0;
             foreach (string n in group)
             {
-                if (n != "0")
+                if (n != "none")
                 {
-                    ChangeGroup(uid[count], n);
+                    EditDatabase.ChangeGroup(uid[count], n, (string)Session["uid"]);
                 }
                 count++;
             }
@@ -421,15 +358,13 @@ namespace MVCWebApp.Controllers
         List<LOGSTATE> ShowState = new List<LOGSTATE>();
         public ActionResult LogState(int? page)
         {
-            DataTable dt;
             string strSQL = @"SELECT boo_state, str_uid, str_type, tsp_time FROM public.logstate;"; // 要換掉的語法
             Dictionary<string, Type> dicModel = new Dictionary<string,Type>();
             dicModel.Add("boo_state", typeof(bool));
             dicModel.Add("str_uid", typeof(string));
             dicModel.Add("str_type", typeof(string));
             dicModel.Add("tsp_time", typeof(DateTime));
-
-            GetDataTable(out dt, strSQL, dicModel);
+            DataTable dt = GetDatabase.GetDT(strSQL, dicModel);
             foreach (DataRow dr in dt.Rows)
             {
                 ShowState.Add(new LOGSTATE()

@@ -35,9 +35,9 @@ namespace MVCWebApp.Models
         // 信箱驗證
         [Display(Name = "E-mail")]
         [EmailAddress(ErrorMessage = "請輸入正確的Email格式")] //檢查email格式
-        public String email { get; set; }
+        public string email { get; set; }
 
         //確認刪除
-        public String deleteAC { get; set; }
+        public string deleteAC { get; set; }
     }
 }
