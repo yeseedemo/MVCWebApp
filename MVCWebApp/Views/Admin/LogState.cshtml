@@ -5,17 +5,14 @@
 @using X.PagedList;
 
 <script type="text/javascript" src="~/Scripts/jquery-3.3.1.js"></script> <!-- Aways on top-->
-<!-- <script src="~/Scripts/jquery-ui-1.12.1.js"></script> -->
 
 <link rel="stylesheet" href="~/Content/bootstrap.css" />
 <link rel="stylesheet" href="~/Content/bootstrap-select.css" />
 
+<link href="~/Content/bootstrap-datepicker3.min.css" rel="stylesheet" />
+<script src="~/Scripts/bootstrap-datepicker.min.js"></script>
+
 <link href="/Content/PagedList.css" rel="stylesheet" type="text/css" />
-
-<script type="text/javascript" src="~/Scripts/moment.js"></script>
-<link rel="stylesheet" href="~/Content/bootstrap-datetimepicker.css" />
-<script type="text/javascript" src="~/Scripts/bootstrap-datetimepicker.js"></script>
-
 
 <table class="table">
     <tr>
@@ -53,7 +50,6 @@
 
 <form style="margin-left:10px;" method="post" action="">
     @Html.PagedListPager((IPagedList)ViewBag.OnePage, page => Url.Action("LogState", new { page }))
-    <!-- 是不是重新跑了一次程式 只是預設頁換掉? -->
     <select class="selectpicker" multiple>
         <!-- 操作狀態 -->
         <option>成功</option>
@@ -71,43 +67,32 @@
     <script src="~/Scripts/i18n/defaults-zh_TW.js"></script>
 
     <!-- 這邊是日期的部分 -->
-    <div class="container">
-        <div class='col-md-5'>
-            <div class="form-group">
-                <div class='input-group date' id='datetimepicker6'>
-                    <input type='text' class="form-control" />
-                    <span class="input-group-addon">
-                        <span class="glyphicon glyphicon-calendar"></span>
-                    </span>
-                </div>
-            </div>
-        </div>
-        <div class='col-md-5'>
-            <div class="form-group">
-                <div class='input-group date' id='datetimepicker7'>
-                    <input type='text' class="form-control" />
-                    <span class="input-group-addon">
-                        <span class="glyphicon glyphicon-calendar"></span>
-                    </span>
-                </div>
-            </div>
-        </div>
-    </div>
-    <script type="text/javascript">
+    <script>
         $(function () {
-            $('#datetimepicker6').datetimepicker();
-            $('#datetimepicker7').datetimepicker({
-                useCurrent: false //Important! See issue #1075
+            $("#TextBox1").datepicker();
+        }
+        );
+    </script>
+
+    <script>
+        $(function () {
+            $("#TextBox2").datepicker({
+                format: 'yyyy-mm-dd',
+                //format: 'yyyy-mm-dd hh:mm:ss',
+                //locale: moment.locale('zh-tw')
             });
-            $("#datetimepicker6").on("dp.change", function (e) {
-                $('#datetimepicker7').data("DateTimePicker").minDate(e.date);
-            });
-            $("#datetimepicker7").on("dp.change", function (e) {
-                $('#datetimepicker6').data("DateTimePicker").maxDate(e.date);
+        }
+        );
+    </script>
+
+    <script>
+        $(function () {
+            $(".bootstrap-datepicker").datepicker({
+                format: 'yyyy-mm-dd',
             });
         });
     </script>
-    <!-- -->
+
 
     <button type="submit" class="btn btn-primary">確認修改</button>
 </form>
